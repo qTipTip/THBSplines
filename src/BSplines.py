@@ -147,6 +147,52 @@ def compute_knot_insertion_matrix(degree, coarse, fine):
     return a
 
 
+class TensorProductSpace(object):
+
+    def __init__(self, degrees, knots, dim):
+        self.basis = generate_tensor_product_space(degrees, knots, dim)
+        self.cells = self.generate_cells(knots)
+        self.dim = dim
+
+    def get_basis_functions(self, cell_index):
+        pass
+
+    def get_cells(self, basis_idx):
+        pass
+
+    def get_neighbors(self, basis_idx):
+        pass
+
+    def __index__(self, i):
+        return self.basis[i]
+
+    def __len__(self):
+        return len(self.basis)
+
+    def generate_cells(self, knots):
+        cells = []
+
+        unique_knots = [np.unique(knot) for knot in knots]
+        idx_start = [
+            [j for j in range(len(unique_knots[i]) - 1)] for i in range(self.dim)
+        ]
+        idx_stop = [
+            [j + 1 for j in idx_start[i]] for i in range(self.dim)
+        ]
+
+        idx_start_perm = list(itertools.product(*idx_start))
+        idx_stop_perm = list(itertools.product(*idx_stop))
+        n = len(idx_start_perm)
+
+        for i in range(n):
+            new_cells = []
+            for j in range(self.dim):
+                new_cells.append(unique_knots[j][idx_start_perm[i][j]: idx_stop_perm[i][j] + 1])
+            cells.append(np.array(new_cells))
+
+        return np.array(cells)
+
+
 def generate_tensor_product_space(degrees, knots, dim):
     b_splines = []
 

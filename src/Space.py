@@ -2,13 +2,13 @@ from typing import List
 
 import numpy as np
 
-from src.BSplines import generate_tensor_product_space, compute_knot_insertion_matrix
+from src.BSplines import generate_tensor_product_space, compute_knot_insertion_matrix, TensorProductSpace
 
 
 class Space(object):
 
     def __init__(self, initial_degrees, initial_knots, dim):
-        self.functions = [generate_tensor_product_space(initial_degrees, initial_knots, dim)]
+        self.functions = [TensorProductSpace(initial_degrees, initial_knots, dim)]
         self.knots = [initial_knots]
         self.depth = 0
         self.active_function_indices = len(self.functions)
@@ -72,7 +72,6 @@ class Space(object):
         self.function_to_child_map[level] = {}
         for i in range(len(self.functions[-2])):
             self.function_to_child_map[level][i] = np.nonzero(self.coefficient_matrices[-1][:, i])
-
 
     def set_active_functions(self, level, region):
         pass
