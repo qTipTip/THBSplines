@@ -29,6 +29,7 @@ print(len(S0.functions[1]))
 for level in S0.function_to_child_map:
     print(S0.function_to_child_map[level])
 print(S0.get_children_of_function(0, 2))
+print(S0.get_parent_of_function(1, 3))
 '''
 for b in S0.functions[1]:
     fig = plt.figure()

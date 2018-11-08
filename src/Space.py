@@ -41,10 +41,13 @@ class Space(object):
 
         assert 1 <= level
 
-        for func in self.functions[level - 1]:
-            if func_index in self.get_children_of_function(level - 1, func):
-                return func
-        return -1
+        parents = []
+        for i in range(len(self.functions[level - 1])):
+            if func_index in self.get_children_of_function(level - 1, i):
+                parents.append(i)
+        if len(parents) == 0:
+            return -1
+        return parents
 
     def add_level(self):
 
@@ -71,7 +74,7 @@ class Space(object):
         level = self.depth - 1
         self.function_to_child_map[level] = {}
         for i in range(len(self.functions[-2])):
-            self.function_to_child_map[level][i] = np.nonzero(self.coefficient_matrices[-1][:, i])
+            self.function_to_child_map[level][i] = np.flatnonzero(self.coefficient_matrices[-1][:, i])
 
     def set_active_functions(self, level, region):
         pass

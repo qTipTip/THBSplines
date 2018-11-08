@@ -1,4 +1,5 @@
 import itertools
+from collections import defaultdict
 from functools import lru_cache
 
 import numpy as np
@@ -150,10 +151,10 @@ def compute_knot_insertion_matrix(degree, coarse, fine):
 class TensorProductSpace(object):
 
     def __init__(self, degrees, knots, dim):
+        self.dim = dim
         self.basis = generate_tensor_product_space(degrees, knots, dim)
         self.cells = self.generate_cells(knots)
         self.set_basis_support_cells()
-        self.dim = dim
 
     def get_basis_functions(self, cell_index):
         return self.cell_to_basis_map[cell_index]
@@ -195,7 +196,7 @@ class TensorProductSpace(object):
 
     def set_basis_support_cells(self):
         basis_to_cell_map = {}
-        cell_to_basis_map = {[] for _ in self.cells}
+        cell_to_basis_map = defaultdict(list)
         for n, b in enumerate(self.basis):
             s = b.support
             i = np.flatnonzero(
