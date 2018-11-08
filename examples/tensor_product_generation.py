@@ -30,13 +30,4 @@ for level in S0.function_to_child_map:
     print(S0.function_to_child_map[level])
 print(S0.get_children_of_function(0, 2))
 print(S0.get_parent_of_function(1, 3))
-'''
-for b in S0.functions[1]:
-    fig = plt.figure()
-    axs = Axes3D(fig)
-    for i in range(N):
-        for j in range(N):
-            z[i, j] = b(np.array([x[i], y[j]]))
-    axs.plot_wireframe(X, Y, z)
-    plt.show()
-'''
+print(S0.function_to_child_map)

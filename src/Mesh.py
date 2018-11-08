@@ -10,7 +10,6 @@ class Mesh(object):
     MESH_REFINEMENT_SCHEME = "dyadic"
 
     def __init__(self, initial_knots, initial_degrees, dim):
-        self.deactive_cell_indices = []  # each element is a list of indices corresponding to all the deactivated cells on level
         self.knot_vectors = [initial_knots]  # each element is a list of all the knot vectors on the corresponding level
         self.regions = []
         self.depth = 0
@@ -18,6 +17,10 @@ class Mesh(object):
         self.dim = dim
         self.cells = [self.generate_cells(initial_knots)]
         self.degrees = initial_degrees
+        self.active_cell_indices = [list(range(len(self.cells[0])))]
+        self.nonactive_cell_indices = [[]]
+
+
 
     def get_children_of_cell(self, level: int, cell_index: int) -> List[int]:
         """
@@ -62,10 +65,8 @@ class Mesh(object):
         self.cells.append(self.generate_cells(new_knots))
         self.set_children_of_cells(self.depth)
         self.depth = self.depth + 1
-
-        # update_cell_to_children_map
-        # update region
-        # update active and passive cells.
+        self.active_cell_indices.append([])
+        self.nonactive_cell_indices.append(list(range(len(self.cells[-1]))))
         pass
 
     def generate_cells(self, knots):

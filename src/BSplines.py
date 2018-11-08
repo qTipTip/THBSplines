@@ -198,9 +198,8 @@ class TensorProductSpace(object):
         basis_to_cell_map = {}
         cell_to_basis_map = defaultdict(list)
         for n, b in enumerate(self.basis):
-            s = b.support
             i = np.flatnonzero(
-                np.all((b.support[:, 0] <= self.cells[:, :, 0]) & (b.support[:, 1] >= self.cells[:, :, 1]), axis=1))
+                np.all((b.support[:, :, 0] <= self.cells[:, :, 0]) & (b.support[:, :, 1] >= self.cells[:, :, 1]), axis=1))
             basis_to_cell_map[n] = i
 
             for cell in i:

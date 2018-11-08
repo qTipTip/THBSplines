@@ -59,7 +59,7 @@ class Space(object):
             new_knots.append(refined_knots)
             coefficient_matrices.append(compute_knot_insertion_matrix(degree, knot_vector, refined_knots))
 
-        self.functions.append(generate_tensor_product_space(self.degrees, new_knots, self.dim))
+        self.functions.append(TensorProductSpace(self.degrees, new_knots, self.dim))
         self.knots.append(new_knots)
         self.depth += 1
 
