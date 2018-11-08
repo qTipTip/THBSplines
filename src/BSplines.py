@@ -1,3 +1,4 @@
+import itertools
 from functools import lru_cache
 
 import numpy as np
@@ -144,3 +145,28 @@ def compute_knot_insertion_matrix(degree, coarse, fine):
         a[i, mu - degree:mu + 1] = b
 
     return a
+
+
+def generate_tensor_product_space(degrees, knots, dim):
+    b_splines = []
+
+    idx_start = [
+        [j for j in range(len(knots[i]) - degrees[i] - 1)] for i in range(dim)
+    ]
+    idx_stop = [
+        [j + degrees[i] + 2 for j in idx_start[i]] for i in range(dim)
+    ]
+
+    idx_start_perm = list(itertools.product(*idx_start))
+    idx_stop_perm = list(itertools.product(*idx_stop))
+    n = len(idx_start_perm)
+
+    for i in range(n):
+        new_knots = []
+        for j in range(dim):
+            new_knots.append(knots[j][idx_start_perm[i][j]: idx_stop_perm[i][j]])
+        new_b_spline = BSpline(degrees, new_knots)
+        new_b_spline.tensor_product_indices = idx_start_perm[i]
+        b_splines.append(new_b_spline)
+
+    return b_splines
