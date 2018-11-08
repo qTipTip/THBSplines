@@ -6,6 +6,10 @@ class Space(object):
     def __init__(self):
         self.functions = []
         self.depth = 0
+        self.active_function_indices = []
+        self.deactivated_function_indices = []
+        self.coefficient_matrices = []
+        
 
     def get_children_of_function(self, level: int, func_index: int) -> List[int]:
         """
