@@ -10,15 +10,14 @@ class Mesh(object):
     MESH_REFINEMENT_SCHEME = "dyadic"
 
     def __init__(self, initial_knots, initial_degrees, dim):
-        self.active_cell_indices = []  # each element is a list of indices corresponding to all the active cells on level
         self.deactive_cell_indices = []  # each element is a list of indices corresponding to all the deactivated cells on level
         self.knot_vectors = [initial_knots]  # each element is a list of all the knot vectors on the corresponding level
         self.regions = []
         self.depth = 0
         self.cell_to_children_map = {}  # for each level is a dictionary mapping cell_index to the cell_indices of their children.
         self.dim = dim
+        self.cells = [self.generate_cells(initial_knots)]
         self.degrees = initial_degrees
-        self.cells = self.generate_cells(initial_knots)
 
     def get_children_of_cell(self, level: int, cell_index: int) -> List[int]:
         """
@@ -31,7 +30,7 @@ class Mesh(object):
 
         assert level <= self.depth - 1
 
-        pass
+        return self.cell_to_children_map[level][cell_index]
 
     def get_parent_of_cell(self, level: int, cell_index: int) -> int:
         """
@@ -60,8 +59,11 @@ class Mesh(object):
         for degree, knot_vector in zip(self.degrees, old_knots):
             new_knots.append(insert_midpoints(knot_vector, degree))
 
+        self.cells.append(self.generate_cells(new_knots))
+        self.set_children_of_cells(self.depth)
+        self.depth = self.depth + 1
+
         # update_cell_to_children_map
-        # self.depth = depth + 1
         # update region
         # update active and passive cells.
         pass
@@ -87,4 +89,16 @@ class Mesh(object):
                 new_cells.append(unique_knots[j][idx_start_perm[i][j]: idx_stop_perm[i][j] + 1])
             cells.append(np.array(new_cells))
 
-        return cells
+        return np.array(cells)
+
+    def set_children_of_cells(self, level):
+
+
+        self.cell_to_children_map[level] = {}
+
+        coarse_cells = self.cells[level]
+        fine_cells = self.cells[level+1]
+
+        for i, cell in enumerate(coarse_cells):
+            children = np.flatnonzero(np.all((cell[:, 0] <= fine_cells[:, :, 0]) & (cell[:, 1] >= fine_cells[:, :, 1]), axis=1))
+            self.cell_to_children_map[level][i] = children
