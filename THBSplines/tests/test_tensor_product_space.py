@@ -49,3 +49,16 @@ def test_bivariate_space():
         [0., 0., 0.5, 0.5],
         [0., 0., 0., 1.]])
     np.testing.assert_allclose(proj, expected_proj)
+
+
+def test_get_basis_functions():
+    knots = [
+        [0, 0, 1, 2, 3, 3]
+    ]
+    d = [1]
+    dim = 1
+    S = TensorProductSpace(d, knots, dim)
+
+    assert S.get_basis_functions(0) == {0, 1}
+    assert S.get_basis_functions(1) == {1, 2}
+    assert S.get_basis_functions(2) == {2, 3}

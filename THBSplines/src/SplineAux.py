@@ -1,4 +1,5 @@
 import itertools
+from collections import defaultdict
 from functools import lru_cache
 
 import numpy as np
@@ -220,3 +221,16 @@ def insert_midpoints(knots, p):
     new_array[p + 2:p + 2 * len(midpoints) - 1:2] = knots[p + 1:-p - 1]
 
     return new_array
+
+
+def set_basis_support_cells(functions, cells):
+    basis_to_cell_map = {}
+    cell_to_basis_map = defaultdict(set)
+    for n, b in enumerate(functions):
+        i = np.flatnonzero(
+            np.all((b.support[:, :, 0] <= cells[:, :, 0]) & (b.support[:, :, 1] >= cells[:, :, 1]), axis=1))
+        basis_to_cell_map[n] = set(i)
+
+        for cell in i:
+            cell_to_basis_map[cell].add(n)
+    return basis_to_cell_map, cell_to_basis_map
