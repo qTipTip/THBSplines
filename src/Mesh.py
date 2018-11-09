@@ -67,7 +67,8 @@ class Mesh(object):
         self.depth = self.depth + 1
         self.active_cell_indices.append([])
         self.nonactive_cell_indices.append(list(range(len(self.cells[-1]))))
-        pass
+        self.knot_vectors.append(new_knots)
+
 
     def generate_cells(self, knots):
         cells = []
