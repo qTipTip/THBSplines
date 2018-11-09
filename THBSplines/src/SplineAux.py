@@ -234,3 +234,15 @@ def set_basis_support_cells(functions, cells):
         for cell in i:
             cell_to_basis_map[cell].add(n)
     return basis_to_cell_map, cell_to_basis_map
+
+
+def set_children_of_cells(fine_mesh, coarse_mesh):
+    cell_to_children_map = {}
+    fine_cells = fine_mesh.cells
+    coarse_cells = coarse_mesh.cells
+
+    for i, cell in enumerate(coarse_cells):
+        children = np.flatnonzero(np.all((cell[:, 0] <= fine_cells[:, :, 0]) & (cell[:, 1] >= fine_cells[:, :, 1]), axis=1))
+        cell_to_children_map[i] = children
+
+    return cell_to_children_map

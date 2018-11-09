@@ -1,4 +1,5 @@
 from THBSplines.src import TensorProductMesh
+from THBSplines.src.SplineAux import set_children_of_cells
 
 
 class HierarchicalMesh(object):
@@ -13,6 +14,7 @@ class HierarchicalMesh(object):
         self.active_elements_per_level = {0: set(range(mesh.number_of_elements))}
         self.deactivated_elements_per_level = {0: set()}
         self.mesh_per_level = {0: mesh}
+        self.cell_to_children = {}
 
     def add_new_level(self):
         self.number_of_levels = self.number_of_levels + 1
@@ -20,6 +22,8 @@ class HierarchicalMesh(object):
         self.deactivated_elements_per_level[self.number_of_levels - 1] = set()
         self.number_of_elements_per_level[self.number_of_levels - 1] = 0
         self.mesh_per_level[self.number_of_levels - 1] = self.mesh_per_level[self.number_of_levels - 2].refine()
+        self.cell_to_children[self.number_of_levels - 2] = set_children_of_cells(
+            self.mesh_per_level[self.number_of_levels - 1], self.mesh_per_level[self.number_of_levels - 2])
 
     def refine(self):
         pass
