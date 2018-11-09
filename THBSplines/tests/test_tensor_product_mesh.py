@@ -32,3 +32,31 @@ def test_tensor_product_mesh_init():
     M2 = M.refine()
 
     np.testing.assert_allclose(M2.cells, expected_refined_cells)
+
+
+def test_tensor_product_mesh_init_bivariate():
+    knots = [
+        [0, 0, 1, 1],
+        [0, 0, 1, 1]
+    ]
+    d = [1, 1]
+    dim = 2
+
+    M = TensorProductMesh(d, knots, dim)
+
+    expected_cells = np.array([
+        [[0, 1], [0, 1]],
+    ])
+
+    np.testing.assert_allclose(M.cells, expected_cells)
+
+    M2 = M.refine()
+
+    expected_refined_cells = np.array([
+        [[0, 0.5], [0, 0.5]],
+        [[0, 0.5], [0.5, 1]],
+        [[0.5, 1], [0, 0.5]],
+        [[0.5, 1], [0.5, 1]]
+    ])
+
+    np.testing.assert_allclose(M2.cells, expected_refined_cells)
