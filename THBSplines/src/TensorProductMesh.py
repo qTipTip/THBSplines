@@ -1,4 +1,4 @@
-from THBSplines.src.SplineAux import generate_cells, insert_midpoints
+from THBSplines.src.SplineAux import generate_cells, insert_midpoints, compute_knot_insertion_matrix
 
 
 class TensorProductMesh(object):

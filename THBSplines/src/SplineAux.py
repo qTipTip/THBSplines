@@ -115,7 +115,7 @@ class BSpline(object):
         return np.prod(evaluated_b_splines)
 
 
-def compute_knot_insertion_matrix(degree, coarse, fine):
+def compute_knot_insertion_matrix(degrees, coarse_knots, fine_knots):
     """
     Computes the knot insertion matrix that write coarse B-splines as linear combinations
     of finer B-splines. Requires tau, t to be p+1 regular.
@@ -128,22 +128,28 @@ def compute_knot_insertion_matrix(degree, coarse, fine):
     # assert fine[0:degree + 1] == coarse[0:degree + 1]
     # assert fine[-(degree + 1):-1] == coarse[-(degree + 1):-1]
 
-    m = len(fine) - (degree + 1)
-    n = len(coarse) - (degree + 1)
+    matrices = []
+    for fine, coarse, degree in zip(fine_knots, coarse_knots, degrees):
 
-    a = np.zeros(shape=(m, n))
-    fine = np.array(fine, dtype=np.float64)
-    coarse = np.array(coarse, dtype=np.float64)
-    for i in range(m):
-        mu = find_knot_index(fine[i], coarse)
-        b = 1
-        for k in range(1, degree + 1):
-            tau1 = coarse[mu - k + 1:mu + 1]
-            tau2 = coarse[mu + 1:mu + k + 1]
-            omega = (fine[i + k] - tau1) / (tau2 - tau1)
-            b = np.append((1 - omega) * b, 0) + np.insert((omega * b), 0, 0)
-        a[i, mu - degree:mu + 1] = b
+        m = len(fine) - (degree + 1)
+        n = len(coarse) - (degree + 1)
 
+        a = np.zeros(shape=(m, n))
+        fine = np.array(fine, dtype=np.float64)
+        coarse = np.array(coarse, dtype=np.float64)
+        for i in range(m):
+            mu = find_knot_index(fine[i], coarse)
+            b = 1
+            for k in range(1, degree + 1):
+                tau1 = coarse[mu - k + 1:mu + 1]
+                tau2 = coarse[mu + 1:mu + k + 1]
+                omega = (fine[i + k] - tau1) / (tau2 - tau1)
+                b = np.append((1 - omega) * b, 0) + np.insert((omega * b), 0, 0)
+            a[i, mu - degree:mu + 1] = b
+        matrices.append(a)
+    a = matrices[0]
+    for matrix in matrices[1:]:
+        a = np.kron(a, matrix)
     return a
 
 
