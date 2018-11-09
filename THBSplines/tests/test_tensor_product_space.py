@@ -62,3 +62,18 @@ def test_get_basis_functions():
     assert S.get_basis_functions(0) == {0, 1}
     assert S.get_basis_functions(1) == {1, 2}
     assert S.get_basis_functions(2) == {2, 3}
+    assert S.get_basis_functions([0, 1]) == {0, 1, 2}
+
+
+def test_get_cells():
+    knots = [
+        [0, 0, 1, 2, 3, 3]
+    ]
+    d = [1]
+    dim = 1
+    S = TensorProductSpace(d, knots, dim)
+
+    assert S.get_cells(0) == [{0}]
+    assert S.get_cells(1) == [{0, 1}]
+    assert S.get_cells(2) == [{1, 2}]
+    assert S.get_cells([1, 2]) == [{0, 1}, {1, 2}]
