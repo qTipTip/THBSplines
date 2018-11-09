@@ -58,6 +58,10 @@ def test_hierarchical_space_refine_hierarchical_space():
 
     NE = H.refine_hierarchical_mesh(marked_cells)
 
-    assert NE == [set(), {0, 1}]
+    assert NE == {0: set(), 1: {0, 1}}
     assert H.mesh.active_elements_per_level[0] == {1}
     assert H.mesh.active_elements_per_level[1] == {0, 1}
+
+    MF = H.functions_to_deactivate_from_cells(marked_cells)
+    assert MF == {0: {0}}
+

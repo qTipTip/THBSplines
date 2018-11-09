@@ -55,11 +55,29 @@ class HierarchicalSpace(object):
         if marked_cells[n - 1] != set():
             self.mesh.add_new_level()
 
-        NE = [set()]
+        NE = {0: set()}
         for l in range(n):
             self.mesh.active_elements_per_level[l] = self.mesh.active_elements_per_level[l].difference(marked_cells[l])
             self.mesh.deactivated_elements_per_level[l] = self.mesh.deactivated_elements_per_level[l].union(
                 marked_cells[l])
-            NE.append(self.mesh.get_children_of_cell(marked_cells[l], l))
-            self.mesh.active_elements_per_level[l + 1] = self.mesh.active_elements_per_level[l + 1].union(NE[-1])
+            NE[l + 1] = self.mesh.get_children_of_cell(marked_cells[l], l)
+            self.mesh.active_elements_per_level[l + 1] = self.mesh.active_elements_per_level[l + 1].union(NE[l + 1])
         return NE
+
+    def functions_to_deactivate_from_cells(self, marked_entities):
+        n = self.number_of_levels
+        marked_functions_per_level = {}
+        for l in range(n):
+            marked_functions = self.tensor_product_space_per_level[l].get_basis_functions(marked_entities[l])
+            marked_functions = marked_functions.intersection(self.active_functions_per_level[l])
+
+            marked_cells = self.tensor_product_space_per_level[l].get_cells(marked_functions)
+
+            functions_to_remove = set()
+            for cells, function in zip(marked_cells, marked_functions):
+                if cells.intersection(self.mesh.active_elements_per_level[l]) != set():
+                    functions_to_remove.add(function)
+            marked_functions = marked_functions.difference(functions_to_remove)
+            marked_functions_per_level[l] = marked_functions
+
+        return marked_functions_per_level
