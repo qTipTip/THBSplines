@@ -16,10 +16,10 @@ class HierarchicalMesh(object):
 
     def add_new_level(self):
         self.number_of_levels = self.number_of_levels + 1
-        self.active_elements_per_level[self.number_of_levels] = set()
-        self.deactivated_elements_per_level[self.number_of_levels] = set()
-        self.number_of_elements_per_level[self.number_of_levels] = 0
-        self.mesh_per_level[self.number_of_levels] = self.mesh_per_level[self.number_of_levels - 1].refine()
+        self.active_elements_per_level[self.number_of_levels - 1] = set()
+        self.deactivated_elements_per_level[self.number_of_levels - 1] = set()
+        self.number_of_elements_per_level[self.number_of_levels - 1] = 0
+        self.mesh_per_level[self.number_of_levels - 1] = self.mesh_per_level[self.number_of_levels - 2].refine()
 
     def refine(self):
         pass

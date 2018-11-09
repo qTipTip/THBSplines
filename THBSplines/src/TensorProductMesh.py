@@ -9,6 +9,7 @@ class TensorProductMesh(object):
         self.parametric_dim = parametric_dimension
         self.physical_dim = physical_dimension
         self.cells = generate_cells(knots)
+        self.number_of_elements = len(self.cells)
 
     def refine(self):
         refined_knots = [insert_midpoints(knots, d) for knots, d in zip(self.knots, self.degrees)]
