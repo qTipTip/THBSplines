@@ -33,3 +33,9 @@ class HierarchicalMesh(object):
 
     def get_parents(self):
         pass
+
+    def get_children_of_cell(self, marked_cells, level):
+        children = set()
+        for cell in marked_cells:
+            children = children.union(self.cell_to_children[level][cell])
+        return children

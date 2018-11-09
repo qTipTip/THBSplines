@@ -42,3 +42,22 @@ def test_hierarchical_space_init(SM):
     assert H.number_of_active_functions_per_level == {0: 4, 1: 0}
     assert H.active_functions_per_level == {0: {0, 1, 2, 3}, 1: set()}
     assert H.deactivated_functions_per_level == {0: set(), 1: set()}
+
+
+def test_hierarchical_space_refine_hierarchical_space():
+    knots = [[0, 0, 1, 2, 2]]
+    d = [1]
+    dim = 1
+
+    S = TensorProductSpace(d, knots, dim)
+    H = HierarchicalMesh(S.mesh)
+
+    H = HierarchicalSpace(H, S)
+
+    marked_cells = [{0}]
+
+    NE = H.refine_hierarchical_mesh(marked_cells)
+
+    assert NE == [set(), {0, 1}]
+    assert H.mesh.active_elements_per_level[0] == {1}
+    assert H.mesh.active_elements_per_level[1] == {0, 1}

@@ -28,11 +28,38 @@ class HierarchicalSpace(object):
             self.deactivated_functions_per_level[self.number_of_levels - 1] = set()
             self.number_of_active_functions_per_level[self.number_of_levels - 1] = 0
 
-    def refine(self):
-        pass
+    def refine(self, marked_entities, type='cells'):
+
+        if type == 'cells':
+            marked_cells = marked_entities
+        elif type == 'functions':
+            marked_cells = self.compute_cells_to_refine(marked_entities)
+
+        NE = self.refine_hierarchical_mesh(marked_cells)
+
+        if type == 'cells':
+            marked_functions = self.functions_to_deactivate_from_cells(marked_entities)
+        elif type == 'functions':
+            marked_functions = self.functions_to_deactivate_from_neighbours(marked_entities)
+
+        self.refine_hierarchical_space(marked_functions, NE)
 
     def get_children(self):
         pass
 
     def get_parents(self):
         pass
+
+    def refine_hierarchical_mesh(self, marked_cells):
+        n = self.number_of_levels
+        if marked_cells[n - 1] != set():
+            self.mesh.add_new_level()
+
+        NE = [set()]
+        for l in range(n):
+            self.mesh.active_elements_per_level[l] = self.mesh.active_elements_per_level[l].difference(marked_cells[l])
+            self.mesh.deactivated_elements_per_level[l] = self.mesh.deactivated_elements_per_level[l].union(
+                marked_cells[l])
+            NE.append(self.mesh.get_children_of_cell(marked_cells[l], l))
+            self.mesh.active_elements_per_level[l + 1] = self.mesh.active_elements_per_level[l + 1].union(NE[-1])
+        return NE
