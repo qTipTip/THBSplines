@@ -53,6 +53,7 @@ class HierarchicalSpace(object):
     def refine_hierarchical_mesh(self, marked_cells):
         n = self.number_of_levels
         if marked_cells[n - 1] != set():
+            print('Adding new level to mesh')
             self.mesh.add_new_level()
 
         NE = {0: set()}
@@ -62,6 +63,7 @@ class HierarchicalSpace(object):
                 marked_cells[l])
             NE[l + 1] = self.mesh.get_children_of_cell(marked_cells[l], l)
             self.mesh.active_elements_per_level[l + 1] = self.mesh.active_elements_per_level[l + 1].union(NE[l + 1])
+        assert len(NE) == n + 1
         return NE
 
     def functions_to_deactivate_from_cells(self, marked_entities):
@@ -81,3 +83,23 @@ class HierarchicalSpace(object):
             marked_functions_per_level[l] = marked_functions
 
         return marked_functions_per_level
+
+    def refine_hierarchical_space(self, marked_functions, NE):
+        if self.mesh.number_of_levels > self.number_of_levels:
+            self.add_new_level()
+        n = self.number_of_levels - 1
+        for l in range(n):
+            self.active_functions_per_level[l] = self.active_functions_per_level[l].difference(marked_functions)
+            self.deactivated_functions_per_level[l] = self.deactivated_functions_per_level[l].union(marked_functions)
+            new = NE[l+1]
+            F = self.tensor_product_space_per_level[l + 1].get_basis_functions(new)
+            F = F.difference(self.active_functions_per_level[l + 1])
+
+            function_cells = self.tensor_product_space_per_level[l+1].get_cells(F)
+            functions_to_remove = set()
+            for cells, function in zip(function_cells, F):
+                if not cells.issubset(self.mesh.active_elements_per_level[l + 1].union(
+                        self.mesh.deactivated_elements_per_level[l + 1])):
+                    functions_to_remove.add(function)
+            F = F.difference(functions_to_remove)
+            self.active_functions_per_level[l + 1] = self.active_functions_per_level[l + 1].union(F)

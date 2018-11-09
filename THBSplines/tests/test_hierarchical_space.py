@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 
 from THBSplines.src.HierarchicalMesh import HierarchicalMesh
@@ -65,3 +66,35 @@ def test_hierarchical_space_refine_hierarchical_space():
     MF = H.functions_to_deactivate_from_cells(marked_cells)
     assert MF == {0: {0}}
 
+
+def test_hierarchical_space_refine():
+    d = [2]
+    dim = 1
+    knots = [[0, 0, 0, 1, 2, 3, 4, 4, 4]]
+
+    S = TensorProductSpace(d, knots, dim)
+    H = HierarchicalMesh(S.mesh)
+
+    H = HierarchicalSpace(H, S)
+
+    marked_cells = [{0, 1, 2, 3}]
+
+    H.refine(marked_cells)
+    print(H.active_functions_per_level)
+    np.testing.assert_equal(H.active_functions_per_level,
+                            {0: {1, 2}, 1: {0, 1}}
+                           )
+    import matplotlib.pyplot as plt
+
+    x = np.linspace(0, 4, 100)
+
+    for l in range(H.number_of_levels):
+        for b in H.active_functions_per_level[l]:
+            basis = H.tensor_product_space_per_level[l].functions[b]
+            y = [basis(X) for X in x]
+            plt.plot(x, y)
+        for b in H.deactivated_functions_per_level[l]:
+            basis = H.tensor_product_space_per_level[l].functions[b]
+            y = [basis(X) for X in x]
+            plt.plot(x, y, alpha=0.2)
+        plt.show()
