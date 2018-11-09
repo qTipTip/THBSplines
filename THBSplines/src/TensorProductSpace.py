@@ -45,8 +45,7 @@ class TensorProductSpace(object):
         function_cells = self.get_cells(function_indices)
         for i, function in enumerate(function_indices):
             cells = function_cells[i]
-            function_neighbours = set()
-            for cell_idx in cells:
-                function_neighbours = function_neighbours.union(self.get_basis_functions(cell_idx))
+            function_neighbours = self.get_basis_functions(cells)
+            function_neighbours.discard(function)
             functions.append(function_neighbours)
         return functions

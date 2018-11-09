@@ -77,3 +77,16 @@ def test_get_cells():
     assert S.get_cells(1) == [{0, 1}]
     assert S.get_cells(2) == [{1, 2}]
     assert S.get_cells([1, 2]) == [{0, 1}, {1, 2}]
+
+
+def test_get_neighbours():
+    knots = [
+        [0, 0, 1, 2, 3, 3]
+    ]
+    d = [1]
+    dim = 1
+    S = TensorProductSpace(d, knots, dim)
+
+    assert S.get_neighbours(0) == [{1}]
+    assert S.get_neighbours(1) == [{0, 2}]
+    assert S.get_neighbours([0, 1]) == [{1}, {0, 2}]
