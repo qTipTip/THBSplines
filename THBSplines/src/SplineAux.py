@@ -169,3 +169,28 @@ def generate_tensor_product_space(degrees, knots, dim):
         b_splines.append(new_b_spline)
 
     return b_splines
+
+
+def generate_cells(knots):
+    dim = len(knots)
+    cells = []
+
+    unique_knots = [np.unique(knot) for knot in knots]
+    idx_start = [
+        [j for j in range(len(unique_knots[i]) - 1)] for i in range(dim)
+    ]
+    idx_stop = [
+        [j + 1 for j in idx_start[i]] for i in range(dim)
+    ]
+
+    idx_start_perm = list(itertools.product(*idx_start))
+    idx_stop_perm = list(itertools.product(*idx_stop))
+    n = len(idx_start_perm)
+
+    for i in range(n):
+        new_cells = []
+        for j in range(dim):
+            new_cells.append(unique_knots[j][idx_start_perm[i][j]: idx_stop_perm[i][j] + 1])
+        cells.append(np.array(new_cells))
+
+    return np.array(cells)
