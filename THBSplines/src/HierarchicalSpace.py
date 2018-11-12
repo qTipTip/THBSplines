@@ -1,3 +1,5 @@
+import numpy as np
+
 from THBSplines.src.HierarchicalMesh import HierarchicalMesh
 from THBSplines.src.TensorProductSpace import TensorProductSpace
 
@@ -22,7 +24,7 @@ class HierarchicalSpace(object):
             new_space, projection = self.tensor_product_space_per_level[self.mesh.number_of_levels - 2].refine()
 
             self.tensor_product_space_per_level.append(new_space)
-            self.projectors[self.mesh.number_of_levels - 1] = projection
+            self.projectors[self.mesh.number_of_levels - 2] = projection
             self.number_of_levels = self.number_of_levels + 1
             self.active_functions_per_level[self.number_of_levels - 1] = set()
             self.deactivated_functions_per_level[self.number_of_levels - 1] = set()
@@ -44,8 +46,12 @@ class HierarchicalSpace(object):
 
         self.refine_hierarchical_space(marked_functions, NE)
 
-    def get_children(self):
-        pass
+    def get_children(self, marked_functions, level):
+        children = set()
+        for function in marked_functions:
+            c = set(np.flatnonzero(self.projectors[level][:, function]))
+            children = children.union(c)
+        return children
 
     def get_parents(self):
         pass
@@ -84,22 +90,39 @@ class HierarchicalSpace(object):
 
         return marked_functions_per_level
 
-    def refine_hierarchical_space(self, marked_functions, NE):
+    def refine_hierarchical_space(self, marked_functions, new_cells):
         if self.mesh.number_of_levels > self.number_of_levels:
             self.add_new_level()
         n = self.number_of_levels - 1
-        for l in range(n):
-            self.active_functions_per_level[l] = self.active_functions_per_level[l].difference(marked_functions)
-            self.deactivated_functions_per_level[l] = self.deactivated_functions_per_level[l].union(marked_functions)
-            new = NE[l+1]
-            F = self.tensor_product_space_per_level[l + 1].get_basis_functions(new)
-            F = F.difference(self.active_functions_per_level[l + 1])
 
-            function_cells = self.tensor_product_space_per_level[l+1].get_cells(F)
-            functions_to_remove = set()
-            for cells, function in zip(function_cells, F):
-                if not cells.issubset(self.mesh.active_elements_per_level[l + 1].union(
-                        self.mesh.deactivated_elements_per_level[l + 1])):
-                    functions_to_remove.add(function)
-            F = F.difference(functions_to_remove)
-            self.active_functions_per_level[l + 1] = self.active_functions_per_level[l + 1].union(F)
+        self.update_active_functions(marked_functions, new_cells)
+
+
+    def update_active_functions(self, marked_functions, new_cells):
+
+        active = self.active_functions_per_level
+        deactivated = self.deactivated_functions_per_level
+
+        for l in range(self.number_of_levels-1):
+            active[l] = active[l].difference(marked_functions[l])
+            deactivated[l] = deactivated[l].union(marked_functions[l])
+
+            children = self.get_children(marked_functions[l], l)
+            active_and_deactive = active[l+1].union(deactivated[l+1])
+            new_active = children.difference(active_and_deactive)
+            active[l+1] = active[l+1].union(new_active)
+
+            new_possible_active_functions = self.tensor_product_space_per_level[l+1].get_basis_functions(new_cells[l+1])
+            new_possible_active_functions = new_possible_active_functions.difference(active[l+1])
+
+            new_cells_next = self.tensor_product_space_per_level[l+1].get_cells(new_possible_active_functions)
+
+            new_functions_to_remove = set()
+            active_deactive_cells = self.mesh.active_elements_per_level[l+1].union(self.mesh.deactivated_elements_per_level[l+1])
+
+            for cells, function in zip(new_cells_next, new_possible_active_functions):
+                if not cells.issubset(active_deactive_cells):
+                    new_functions_to_remove.add(function)
+
+            new_possible_active_functions.difference(new_functions_to_remove)
+            active[l+1] = active[l+1].union(new_possible_active_functions)

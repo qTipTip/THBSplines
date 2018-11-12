@@ -80,9 +80,8 @@ def test_hierarchical_space_refine():
     marked_cells = [{0, 1, 2, 3}]
 
     H.refine(marked_cells)
-    print(H.active_functions_per_level)
     np.testing.assert_equal(H.active_functions_per_level,
-                            {0: {1, 2}, 1: {0, 1}}
+                            {0: set(), 1: {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}}
                            )
     import matplotlib.pyplot as plt
 
