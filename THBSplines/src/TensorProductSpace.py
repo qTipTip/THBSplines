@@ -49,3 +49,8 @@ class TensorProductSpace(object):
             function_neighbours.discard(function)
             functions.append(function_neighbours)
         return functions
+
+    def get_function(self, coefficients):
+        def f(x):
+            return sum(b(x) * c for b, c in zip(self.functions, coefficients))
+        return f

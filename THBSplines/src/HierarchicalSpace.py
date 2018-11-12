@@ -106,7 +106,7 @@ class HierarchicalSpace(object):
     def refine_hierarchical_space(self, marked_functions, new_cells):
         if self.mesh.number_of_levels > self.number_of_levels:
             self.add_new_level()
-            marked_functions[self.mesh.number_of_levels-1] = set()
+            marked_functions[self.mesh.number_of_levels - 1] = set()
 
         self.update_active_functions(marked_functions, new_cells)
 
@@ -114,7 +114,7 @@ class HierarchicalSpace(object):
 
         active = self.active_functions_per_level
         deactivated = self.deactivated_functions_per_level
-        for l in range(self.number_of_levels-1):
+        for l in range(self.number_of_levels - 1):
             active[l] = active[l].difference(marked_functions[l])
             deactivated[l] = deactivated[l].union(marked_functions[l])
 
@@ -140,9 +140,56 @@ class HierarchicalSpace(object):
             new_possible_active_functions = new_possible_active_functions.difference(new_functions_to_remove)
             active[l + 1] = active[l + 1].union(new_possible_active_functions)
 
-    def set_truncated_coefficients(self):
+        self.truncated_coefficients()
 
-        nfunctions_per_level = self.number_of_active_functions_per_level
+    def truncated_coefficients(self):
 
-        for level in range(self.number_of_levels-1):
-            pass
+        thb_matrices = [np.copy(self.projectors[matrix]) for matrix in self.projectors]
+        for l in range(self.number_of_levels - 1):
+            active_deactive_funcs = self.active_functions_per_level[l + 1].union(
+                self.deactivated_functions_per_level[l + 1])
+            for i in active_deactive_funcs:
+                thb_matrices[l][i, :] = 0
+
+        level_0_dim = len(self.tensor_product_space_per_level[0].functions)
+        C = np.identity(level_0_dim)
+
+        for level in range(self.number_of_levels - 1):
+            basis_change = thb_matrices[level]
+
+            C = basis_change @ C
+            Na = len(self.active_functions_per_level[level + 1])
+            Nl = len(self.tensor_product_space_per_level[level + 1].functions)
+            J = np.zeros((Nl, Na))
+            for i, active in enumerate(self.active_functions_per_level[level + 1]):
+                J[active, i] = 1
+            C = np.block([[C, J]])
+        C = C[:, ~np.all(C == 0, axis=0)]
+
+        return C
+
+    def visualize_hierarchical_mesh(self):
+        import matplotlib.pyplot as plt
+        import matplotlib.patches as plp
+        if self.parametric_dim != 2:
+            raise ValueError('Can only visualize 2D-meshes')
+
+        fig = plt.figure()
+        axs = fig.gca()
+        for level in range(self.number_of_levels):
+            for i, cell in enumerate(self.mesh.mesh_per_level[level].cells):
+                if i in self.mesh.active_elements_per_level[level]:
+                    w, h = (cell[:, 1] - cell[:, 0])
+                    rect = plp.Rectangle((cell[0, 0], cell[1, 0]), w, h, alpha=0.2, linewidth=2, fill=False,
+                                         edgecolor='black')
+                    axs.add_patch(rect)
+        plt.xlim(self.mesh.mesh_per_level[0].knots[0][0], self.mesh.mesh_per_level[0].knots[0][-1])
+        plt.xlim(self.mesh.mesh_per_level[0].knots[1][0], self.mesh.mesh_per_level[0].knots[1][-1])
+        return fig
+
+    def get_truncated_basis(self):
+        C = self.truncated_coefficients()
+
+        functions = [self.tensor_product_space_per_level[-1].get_function(coeffs) for coeffs in C.T]
+        return functions
+
