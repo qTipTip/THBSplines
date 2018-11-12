@@ -25,6 +25,7 @@ class HierarchicalMesh(object):
         self.cell_to_children[self.number_of_levels - 2] = set_children_of_cells(
             self.mesh_per_level[self.number_of_levels - 1], self.mesh_per_level[self.number_of_levels - 2])
 
+
     def refine(self):
         pass
 

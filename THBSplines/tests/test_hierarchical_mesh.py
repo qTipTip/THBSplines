@@ -41,10 +41,26 @@ def test_hierarchical_mesh_add_level(T):
     assert H.number_of_elements_per_level[1] == 0
 
     np.testing.assert_equal(H.cell_to_children[0], {
-        0: [0, 1, 4, 5],
-        1: [2, 3, 6, 7],
-        2: [8, 9, 12, 13],
-        3: [10, 11, 14, 15],
-        4: [16, 17, 20, 21],
-        5: [18, 19, 22, 23]
+        0: {0, 1, 4, 5},
+        1: {2, 3, 6, 7},
+        2: {8, 9, 12, 13},
+        3: {10, 11, 14, 15},
+        4: {16, 17, 20, 21},
+        5: {18, 19, 22, 23}
     })
+
+
+def test_hierarchical_mesh_univariate():
+    knots = [
+        [0, 1, 2, 3, 4]
+    ]
+    d = [2]
+    dim = 1
+
+    H = HierarchicalMesh(TensorProductMesh(d, knots, dim))
+
+    assert H.cell_to_children == {}
+
+    H.add_new_level()
+
+    assert H.cell_to_children == {0: {0: {0, 1}, 1: {2, 3}, 2: {4, 5}, 3: {6, 7}}}

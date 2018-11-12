@@ -18,6 +18,18 @@ def find_knot_index(x, knots, endpoint=False):
     return np.max(np.argmax(knots > x) - 1, 0)
 
 
+def augment_knots(knots, degree):
+    """
+    Adds degree + 1 values to either end of the knot vector, in order to facilitate matrix based evaluation.
+    :param knots: knot vector
+    :param degree: polynomial degree
+    :return: padded knot vector
+    """
+
+    return np.pad(knots, (degree + 1, degree + 1), 'constant',
+                  constant_values=(knots[0] - 1, knots[-1] + 1))
+
+
 class UnivariateBSpline(object):
 
     def __init__(self, degree, knots, endpoint=True):
@@ -64,17 +76,6 @@ class UnivariateBSpline(object):
         """
         return find_knot_index(x, self.knots, self.endpoint)
 
-    def augment_knots(self):
-        """
-        Adds degree + 1 values to either end of the knot vector, in order to facilitate matrix based evaluation.
-        :param knots: knot vector
-        :param degree: polynomial degree
-        :return: padded knot vector
-        """
-
-        return np.pad(self.knots, (self.degree + 1, self.degree + 1), 'constant',
-                      constant_values=(self.knots[0] - 1, self.knots[-1] + 1))
-
     @property
     def endpoint(self):
         return self._endpoint
@@ -84,6 +85,9 @@ class UnivariateBSpline(object):
         self._endpoint = value
         self.__call__.cache.clear()
         self.knot_index.cache.clear()
+
+    def augment_knots(self):
+        return augment_knots(self.knots, self.degree)
 
 
 class BSpline(object):
@@ -131,6 +135,8 @@ def compute_knot_insertion_matrix(degrees, coarse_knots, fine_knots):
 
     matrices = []
     for fine, coarse, degree in zip(fine_knots, coarse_knots, degrees):
+        fine = augment_knots(fine, degree)
+        coarse = augment_knots(coarse, degree)
 
         m = len(fine) - (degree + 1)
         n = len(coarse) - (degree + 1)
@@ -147,7 +153,7 @@ def compute_knot_insertion_matrix(degrees, coarse_knots, fine_knots):
                 omega = (fine[i + k] - tau1) / (tau2 - tau1)
                 b = np.append((1 - omega) * b, 0) + np.insert((omega * b), 0, 0)
             a[i, mu - degree:mu + 1] = b
-        matrices.append(a)
+        matrices.append(a[degree + 1:-degree - 1, degree + 1:-degree - 1])
     a = matrices[0]
     for matrix in matrices[1:]:
         a = np.kron(a, matrix)
@@ -203,24 +209,36 @@ def generate_cells(knots):
     return np.array(cells)
 
 
-def insert_midpoints(knots, p):
+def insert_midpoints(knots, p, s='pad'):
     """
     Inserts midpoints in all interior knot intervals of a p+1 regular knot vector.
+    :param s:
     :param knots: p + 1 regular knot vector to be refined
     :param p: spline degree
     :return: refined_knots
     """
 
-    knots = np.array(knots, dtype=np.float64)
-    midpoints = (knots[p:-p - 1] + knots[p + 1:-p]) / 2
-    new_array = np.zeros(len(knots) + len(midpoints), dtype=np.float64)
+    if s == 'pad':
+        knots = np.array(knots, dtype=np.float64)
+        midpoints = (knots[p:-p - 1] + knots[p + 1:-p]) / 2
+        new_array = np.zeros(len(knots) + len(midpoints), dtype=np.float64)
 
-    new_array[:p + 1] = knots[:p + 1]
-    new_array[-p - 1:] = knots[-p - 1]
-    new_array[p + 1:p + 2 * len(midpoints):2] = midpoints
-    new_array[p + 2:p + 2 * len(midpoints) - 1:2] = knots[p + 1:-p - 1]
+        new_array[:p + 1] = knots[:p + 1]
+        new_array[-p - 1:] = knots[-p - 1]
+        new_array[p + 1:p + 2 * len(midpoints):2] = midpoints
+        new_array[p + 2:p + 2 * len(midpoints) - 1:2] = knots[p + 1:-p - 1]
 
-    return new_array
+        return new_array
+    else:
+        knots = np.array(knots, dtype=np.float64)
+        midpoints = (knots[1:] + knots[:-1]) / 2
+        new_array = np.zeros(len(knots) + len(midpoints), dtype=np.float64)
+        n = len(new_array)
+        new_array[0::2] = knots
+        new_array[1:-1:2] = midpoints
+
+        return new_array
+
 
 
 def set_basis_support_cells(functions, cells):
@@ -241,8 +259,10 @@ def set_children_of_cells(fine_mesh, coarse_mesh):
     fine_cells = fine_mesh.cells
     coarse_cells = coarse_mesh.cells
 
+    print('fine', fine_cells, 'coarse', coarse_cells)
     for i, cell in enumerate(coarse_cells):
-        children = np.flatnonzero(np.all((cell[:, 0] <= fine_cells[:, :, 0]) & (cell[:, 1] >= fine_cells[:, :, 1]), axis=1))
+        children = set(np.flatnonzero(
+            np.all((cell[:, 0] <= fine_cells[:, :, 0]) & (cell[:, 1] >= fine_cells[:, :, 1]), axis=1)))
         cell_to_children_map[i] = children
 
     return cell_to_children_map

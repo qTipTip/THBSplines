@@ -59,18 +59,34 @@ class HierarchicalSpace(object):
     def refine_hierarchical_mesh(self, marked_cells):
         n = self.number_of_levels
         if marked_cells[n - 1] != set():
-            print('Adding new level to mesh')
             self.mesh.add_new_level()
 
-        NE = {0: set()}
-        for l in range(n):
-            self.mesh.active_elements_per_level[l] = self.mesh.active_elements_per_level[l].difference(marked_cells[l])
-            self.mesh.deactivated_elements_per_level[l] = self.mesh.deactivated_elements_per_level[l].union(
-                marked_cells[l])
-            NE[l + 1] = self.mesh.get_children_of_cell(marked_cells[l], l)
-            self.mesh.active_elements_per_level[l + 1] = self.mesh.active_elements_per_level[l + 1].union(NE[l + 1])
-        assert len(NE) == n + 1
-        return NE
+        return self.update_active_cells(marked_cells)
+
+    def update_active_cells(self, marked_cells):
+
+        number_of_levels = len(marked_cells)
+        new_cells = {0: set()}
+
+        for level in range(number_of_levels):
+            if marked_cells[level] == set():  # no  marked cells at this level:
+                continue
+
+            common_cells = marked_cells[level].intersection(self.mesh.active_elements_per_level[level])
+            self.mesh.active_elements_per_level[level] = self.mesh.active_elements_per_level[level].difference(
+                common_cells)
+            self.mesh.deactivated_elements_per_level[level] = self.mesh.deactivated_elements_per_level[level].union(
+                marked_cells[level])
+
+            new_cells[level + 1] = self.mesh.get_children_of_cell(marked_cells[level], level)
+            self.mesh.active_elements_per_level[level + 1] = self.mesh.active_elements_per_level[level + 1].union(
+                new_cells[level + 1])
+
+        self.mesh.number_of_elements_per_level = {level: len(self.mesh.active_elements_per_level[level]) for level in
+                                                  range(self.mesh.number_of_levels)}
+        self.mesh.number_of_elements = sum(self.mesh.number_of_elements_per_level)
+
+        return new_cells
 
     def functions_to_deactivate_from_cells(self, marked_entities):
         n = self.number_of_levels
@@ -78,51 +94,47 @@ class HierarchicalSpace(object):
         for l in range(n):
             marked_functions = self.tensor_product_space_per_level[l].get_basis_functions(marked_entities[l])
             marked_functions = marked_functions.intersection(self.active_functions_per_level[l])
-
             marked_cells = self.tensor_product_space_per_level[l].get_cells(marked_functions)
-
             functions_to_remove = set()
             for cells, function in zip(marked_cells, marked_functions):
                 if cells.intersection(self.mesh.active_elements_per_level[l]) != set():
                     functions_to_remove.add(function)
             marked_functions = marked_functions.difference(functions_to_remove)
             marked_functions_per_level[l] = marked_functions
-
         return marked_functions_per_level
 
     def refine_hierarchical_space(self, marked_functions, new_cells):
         if self.mesh.number_of_levels > self.number_of_levels:
             self.add_new_level()
-        n = self.number_of_levels - 1
 
         self.update_active_functions(marked_functions, new_cells)
-
 
     def update_active_functions(self, marked_functions, new_cells):
 
         active = self.active_functions_per_level
         deactivated = self.deactivated_functions_per_level
-
-        for l in range(self.number_of_levels-1):
+        for l in range(self.number_of_levels - 1):
             active[l] = active[l].difference(marked_functions[l])
             deactivated[l] = deactivated[l].union(marked_functions[l])
 
             children = self.get_children(marked_functions[l], l)
-            active_and_deactive = active[l+1].union(deactivated[l+1])
+            active_and_deactive = active[l + 1].union(deactivated[l + 1])
             new_active = children.difference(active_and_deactive)
-            active[l+1] = active[l+1].union(new_active)
+            active[l + 1] = active[l + 1].union(new_active)
 
-            new_possible_active_functions = self.tensor_product_space_per_level[l+1].get_basis_functions(new_cells[l+1])
-            new_possible_active_functions = new_possible_active_functions.difference(active[l+1])
+            new_possible_active_functions = self.tensor_product_space_per_level[l + 1].get_basis_functions(
+                new_cells[l + 1])
+            new_possible_active_functions = new_possible_active_functions.difference(active[l + 1])
 
-            new_cells_next = self.tensor_product_space_per_level[l+1].get_cells(new_possible_active_functions)
+            new_cells_next = self.tensor_product_space_per_level[l + 1].get_cells(new_possible_active_functions)
 
             new_functions_to_remove = set()
-            active_deactive_cells = self.mesh.active_elements_per_level[l+1].union(self.mesh.deactivated_elements_per_level[l+1])
+            active_deactive_cells = self.mesh.active_elements_per_level[l + 1].union(
+                self.mesh.deactivated_elements_per_level[l + 1])
 
             for cells, function in zip(new_cells_next, new_possible_active_functions):
                 if not cells.issubset(active_deactive_cells):
                     new_functions_to_remove.add(function)
 
             new_possible_active_functions.difference(new_functions_to_remove)
-            active[l+1] = active[l+1].union(new_possible_active_functions)
+            active[l + 1] = active[l + 1].union(new_possible_active_functions)

@@ -67,19 +67,58 @@ def test_hierarchical_space_refine_hierarchical_space():
     assert MF == {0: {0}}
 
 
-def test_hierarchical_space_refine():
+def test_hierarchical_space_functions_to_deactivate_from_cells():
     d = [2]
     dim = 1
-    knots = [[0, 0, 0, 1, 2, 3, 4, 4, 4]]
+    knots = [[0, 1, 2, 3, 4]]
 
     S = TensorProductSpace(d, knots, dim)
     H = HierarchicalMesh(S.mesh)
 
     H = HierarchicalSpace(H, S)
 
-    marked_cells = [{0, 1, 2, 3}]
+    marked_cells = [{0, 1}]
+
+    np.testig
+
+
+def test_hierarchical_space_refine():
+    d = [2]
+    dim = 1
+    knots = [[0, 1, 2, 3, 4]]
+
+    S = TensorProductSpace(d, knots, dim)
+    H = HierarchicalMesh(S.mesh)
+
+    H = HierarchicalSpace(H, S)
+
+    marked_cells = [{0, 1}]
+
+    np.testing.assert_equal(H.functions_to_deactivate_from_cells(marked_cells),
+                            {0: set()})
+    H.refine(marked_cells)
+
+    np.testing.assert_equal(H.active_functions_per_level, {0: {0, 1}, 1: {0, 1}})
+
+    marked_cells = [{0, 1}, {0, 1, 2}]
+    H.refine(marked_cells)
+
+    np.testing.assert_equal(H.active_functions_per_level, {0: {0, 1}, 1: {0, 1}, 2: {0, 1, 2, 3, 4, 5}})
+
+def test_hierarchical_space_refine_quadratic():
+    d = [2]
+    dim = 1
+    knots = [[0, 1, 2, 3, 4, 5, 6, 7, 8]]
+
+    S = TensorProductSpace(d, knots, dim)
+    H = HierarchicalMesh(S.mesh)
+
+    H = HierarchicalSpace(H, S)
+    marked_cells = [{}, {2, 3, 4}]
 
     H.refine(marked_cells)
+
     np.testing.assert_equal(H.active_functions_per_level,
-                            {0: set(), 1: {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}}
+                            {0: {0, 1, 3, 4, 5},
+                             1: {4, 5, 6, 7}}
                             )
