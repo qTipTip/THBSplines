@@ -82,18 +82,4 @@ def test_hierarchical_space_refine():
     H.refine(marked_cells)
     np.testing.assert_equal(H.active_functions_per_level,
                             {0: set(), 1: {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}}
-                           )
-    import matplotlib.pyplot as plt
-
-    x = np.linspace(0, 4, 100)
-
-    for l in range(H.number_of_levels):
-        for b in H.active_functions_per_level[l]:
-            basis = H.tensor_product_space_per_level[l].functions[b]
-            y = [basis(X) for X in x]
-            plt.plot(x, y)
-        for b in H.deactivated_functions_per_level[l]:
-            basis = H.tensor_product_space_per_level[l].functions[b]
-            y = [basis(X) for X in x]
-            plt.plot(x, y, alpha=0.2)
-        plt.show()
+                            )
