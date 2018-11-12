@@ -20,9 +20,9 @@ marked_cells = [{2, 3, 4}]
 T.refine(marked_cells)
 
 x = np.linspace(knots[0][0], knots[0][-1], 200)
+
 for level in range(T.number_of_levels):
     for active in T.active_functions_per_level[level]:
         b = T.tensor_product_space_per_level[level].functions[active]
         y = [b(X) for X in x]
         plt.plot(x, y)
-    plt.show()

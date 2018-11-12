@@ -5,6 +5,7 @@ from functools import lru_cache
 import numpy as np
 
 
+
 def find_knot_index(x, knots, endpoint=False):
     # if we have requested end point, and are at the end, return corresponding index.
     knots = knots
@@ -135,9 +136,8 @@ def compute_knot_insertion_matrix(degrees, coarse_knots, fine_knots):
 
     matrices = []
     for fine, coarse, degree in zip(fine_knots, coarse_knots, degrees):
-        fine = augment_knots(fine, degree)
         coarse = augment_knots(coarse, degree)
-
+        fine = augment_knots(fine, degree)
         m = len(fine) - (degree + 1)
         n = len(coarse) - (degree + 1)
 
@@ -153,8 +153,7 @@ def compute_knot_insertion_matrix(degrees, coarse_knots, fine_knots):
                 omega = (fine[i + k] - tau1) / (tau2 - tau1)
                 b = np.append((1 - omega) * b, 0) + np.insert((omega * b), 0, 0)
             a[i, mu - degree:mu + 1] = b
-        matrices.append(a[degree+1:-degree, degree+1:-degree-1])
-
+        matrices.append(a[degree + 1:-degree-1, degree+1:-degree-1])
     a = matrices[0]
     for matrix in matrices[1:]:
         a = np.kron(a, matrix)
@@ -210,7 +209,7 @@ def generate_cells(knots):
     return np.array(cells)
 
 
-def insert_midpoints(knots, p, s='pad'):
+def insert_midpoints(knots, p):
     """
     Inserts midpoints in all interior knot intervals of a p+1 regular knot vector.
     :param s:
@@ -219,7 +218,8 @@ def insert_midpoints(knots, p, s='pad'):
     :return: refined_knots
     """
 
-    if s == 'pad':
+    is_padded = np.allclose(knots[:p+1], knots[0]) and np.allclose(knots[-p-1:], knots[-1])
+    if is_padded:
         knots = np.array(knots, dtype=np.float64)
         midpoints = (knots[p:-p - 1] + knots[p + 1:-p]) / 2
         new_array = np.zeros(len(knots) + len(midpoints), dtype=np.float64)
@@ -228,13 +228,11 @@ def insert_midpoints(knots, p, s='pad'):
         new_array[-p - 1:] = knots[-p - 1]
         new_array[p + 1:p + 2 * len(midpoints):2] = midpoints
         new_array[p + 2:p + 2 * len(midpoints) - 1:2] = knots[p + 1:-p - 1]
-
         return new_array
     else:
         knots = np.array(knots, dtype=np.float64)
         midpoints = (knots[1:] + knots[:-1]) / 2
         new_array = np.zeros(len(knots) + len(midpoints), dtype=np.float64)
-        n = len(new_array)
         new_array[0::2] = knots
         new_array[1:-1:2] = midpoints
 

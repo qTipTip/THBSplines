@@ -23,7 +23,9 @@ import matplotlib.pyplot as plt
 y = [B(X) for X in x]
 plt.plot(x, y)
 
+print(S1.knots)
 for c, i in zip(childs, [4, 5, 6, 7]):
+    print(c.knots)
     y = [C[i, 2] * c(X) for X in x]
     plt.plot(x, y, '--')
 

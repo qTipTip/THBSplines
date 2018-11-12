@@ -1,6 +1,16 @@
 import numpy as np
 
-from THBSplines.src.SplineAux import generate_cells, insert_midpoints, compute_knot_insertion_matrix
+from THBSplines.src.SplineAux import generate_cells
+
+
+def insert_midpoints_mesh(knots):
+    knots = np.array(knots, dtype=np.float64)
+    midpoints = (knots[1:] + knots[:-1]) / 2
+    new_array = np.zeros(len(knots) + len(midpoints), dtype=np.float64)
+    new_array[0::2] = knots
+    new_array[1:-1:2] = midpoints
+
+    return new_array
 
 
 class TensorProductMesh(object):
@@ -14,6 +24,5 @@ class TensorProductMesh(object):
         self.number_of_elements = len(self.cells)
 
     def refine(self):
-        refined_knots = [insert_midpoints(np.unique(knots), d, 'nopad') for knots, d in zip(self.knots, self.degrees)]
+        refined_knots = [insert_midpoints_mesh(np.unique(knots)) for knots in self.knots]
         return TensorProductMesh(self.degrees, refined_knots, self.parametric_dim, self.physical_dim)
-

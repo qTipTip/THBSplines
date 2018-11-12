@@ -106,7 +106,7 @@ class HierarchicalSpace(object):
     def refine_hierarchical_space(self, marked_functions, new_cells):
         if self.mesh.number_of_levels > self.number_of_levels:
             self.add_new_level()
-            marked_functions[self.mesh.number_of_levels] = set()
+            marked_functions[self.mesh.number_of_levels-1] = set()
 
         self.update_active_functions(marked_functions, new_cells)
 
@@ -114,7 +114,7 @@ class HierarchicalSpace(object):
 
         active = self.active_functions_per_level
         deactivated = self.deactivated_functions_per_level
-        for l in range(self.number_of_levels):
+        for l in range(self.number_of_levels-1):
             active[l] = active[l].difference(marked_functions[l])
             deactivated[l] = deactivated[l].union(marked_functions[l])
 
@@ -138,5 +138,12 @@ class HierarchicalSpace(object):
                 if not cells.issubset(active_deactive_cells):
                     new_functions_to_remove.add(function)
 
-            new_possible_active_functions.difference(new_functions_to_remove)
+            new_possible_active_functions = new_possible_active_functions.difference(new_functions_to_remove)
             active[l + 1] = active[l + 1].union(new_possible_active_functions)
+
+    def set_truncated_coefficients(self):
+
+        nfunctions_per_level = self.number_of_active_functions_per_level
+
+        for level in range(self.number_of_levels-1):
+            pass
