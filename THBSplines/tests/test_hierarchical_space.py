@@ -86,9 +86,9 @@ def test_hierarchical_space_refine():
     np.testing.assert_equal(H.active_functions_per_level, {0: {0, 1}, 1: {0, 1}})
 
     marked_cells = [{0, 1}, {0, 1, 2}]
-    #H.refine(marked_cells)
+    H.refine(marked_cells)
 
-    #np.testing.assert_equal(H.active_functions_per_level, {0: {0, 1}, 1: {0, 1}, 2: {0, 1, 2, 3, 4, 5}})
+    np.testing.assert_equal(H.active_functions_per_level, {0: {0, 1}, 1: {1}, 2: {0, 1, 2, 3}})
 
 
 def test_hierarchical_space_refine_quadratic():

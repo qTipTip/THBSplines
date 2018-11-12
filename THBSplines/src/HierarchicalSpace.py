@@ -120,7 +120,6 @@ class HierarchicalSpace(object):
 
             children = self.get_children(marked_functions[l], l)
             active_and_deactive = active[l + 1].union(deactivated[l + 1])
-            print(active_and_deactive)
             new_active = children.difference(active_and_deactive)
             active[l + 1] = active[l + 1].union(new_active)
 
