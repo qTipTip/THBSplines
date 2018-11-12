@@ -4,7 +4,15 @@ from functools import lru_cache
 
 import numpy as np
 
+def memoize(f):
+    dict = {}
 
+    def wrapper(*args):
+        key = ''.join(str(x) for x in args)
+        if key not in dict:
+            dict[key] = f(*args)
+        return dict[key]
+    return wrapper
 
 def find_knot_index(x, knots, endpoint=False):
     # if we have requested end point, and are at the end, return corresponding index.
@@ -109,6 +117,7 @@ class BSpline(object):
         ], dtype=np.float64)
         self.tensor_product_indices = None  # used for identifying the B-spline in a tensor product mesh.
 
+    @memoize
     def __call__(self, x):
         """
         Evaluates the BSpline at the point x.

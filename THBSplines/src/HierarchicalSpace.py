@@ -190,6 +190,10 @@ class HierarchicalSpace(object):
     def get_truncated_basis(self):
         C = self.truncated_coefficients()
 
-        functions = [self.tensor_product_space_per_level[-1].get_function(coeffs) for coeffs in C.T]
+        m, n = C.shape
+        functions = []
+        for i in range(n):
+            index = np.flatnonzero(C[:, i])
+            functions.append(self.tensor_product_space_per_level[-1].get_function(C[:, i], index))
         return functions
 
