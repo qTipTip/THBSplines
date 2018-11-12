@@ -153,7 +153,8 @@ def compute_knot_insertion_matrix(degrees, coarse_knots, fine_knots):
                 omega = (fine[i + k] - tau1) / (tau2 - tau1)
                 b = np.append((1 - omega) * b, 0) + np.insert((omega * b), 0, 0)
             a[i, mu - degree:mu + 1] = b
-        matrices.append(a[degree + 1:-degree - 1, degree + 1:-degree - 1])
+        matrices.append(a[degree+1:-degree, degree+1:-degree-1])
+
     a = matrices[0]
     for matrix in matrices[1:]:
         a = np.kron(a, matrix)
@@ -259,7 +260,6 @@ def set_children_of_cells(fine_mesh, coarse_mesh):
     fine_cells = fine_mesh.cells
     coarse_cells = coarse_mesh.cells
 
-    print('fine', fine_cells, 'coarse', coarse_cells)
     for i, cell in enumerate(coarse_cells):
         children = set(np.flatnonzero(
             np.all((cell[:, 0] <= fine_cells[:, :, 0]) & (cell[:, 1] >= fine_cells[:, :, 1]), axis=1)))

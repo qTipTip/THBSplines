@@ -16,7 +16,8 @@ class TensorProductSpace(object):
         self.basis_to_cell, self.cell_to_basis = set_basis_support_cells(self.functions, self.mesh.cells)
 
     def refine(self):
-        refined_knots = [insert_midpoints(knots, d) for knots, d in zip(self.knots, self.degrees)]
+        refined_knots = [insert_midpoints(knots, d, 'nopad') for knots, d in zip(self.knots, self.degrees)]
+        print(refined_knots)
         projection = compute_knot_insertion_matrix(self.degrees, self.knots, refined_knots)
         refined_space = TensorProductSpace(self.degrees, refined_knots, self.parametric_dim, self.physical_dim)
         return refined_space, projection

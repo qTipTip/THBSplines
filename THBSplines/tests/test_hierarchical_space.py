@@ -79,7 +79,8 @@ def test_hierarchical_space_functions_to_deactivate_from_cells():
 
     marked_cells = [{0, 1}]
 
-    np.testig
+    np.testing
+    assert False
 
 
 def test_hierarchical_space_refine():
@@ -105,6 +106,7 @@ def test_hierarchical_space_refine():
 
     np.testing.assert_equal(H.active_functions_per_level, {0: {0, 1}, 1: {0, 1}, 2: {0, 1, 2, 3, 4, 5}})
 
+
 def test_hierarchical_space_refine_quadratic():
     d = [2]
     dim = 1
@@ -114,7 +116,7 @@ def test_hierarchical_space_refine_quadratic():
     H = HierarchicalMesh(S.mesh)
 
     H = HierarchicalSpace(H, S)
-    marked_cells = [{}, {2, 3, 4}]
+    marked_cells = [{2, 3, 4}]
 
     H.refine(marked_cells)
 
