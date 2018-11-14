@@ -124,11 +124,12 @@ class BSpline(object):
         :param x: np.ndarray
         :return: B(x_1, ..., x_d)
         """
-        x = np.reshape(x, self.dimension)
-        evaluated_b_splines = np.array([self.basis_functions[i](x[i]) for i in range(self.dimension)])
+        x = np.reshape(x, (-1, self.dimension))
+        y = np.zeros(len(x))
+        for i, X in enumerate(x):
+            y[i] = np.prod([self.basis_functions[j](X[j]) for j in range(self.dimension)])
 
-        return np.prod(evaluated_b_splines)
-
+        return y
 
 def compute_knot_insertion_matrix(degrees, coarse_knots, fine_knots):
     """
