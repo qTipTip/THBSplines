@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 import numpy as np
 
 from THBSplines.THBSplines.HierarchicalMesh import HierarchicalMesh
@@ -174,17 +176,25 @@ class HierarchicalSpace(object):
         if self.parametric_dim != 2:
             raise ValueError('Can only visualize 2D-meshes')
 
+        self.set_overloading()
         fig = plt.figure()
         axs = fig.gca()
+        glob_elem_idx = 0
         for level in range(self.number_of_levels):
             for i, cell in enumerate(self.mesh.mesh_per_level[level].cells):
                 if i in self.mesh.active_elements_per_level[level]:
                     w, h = (cell[:, 1] - cell[:, 0])
+                    mp = [cell[0, 0] + w / 2, cell[1, 0] + h / 2]
                     rect = plp.Rectangle((cell[0, 0], cell[1, 0]), w, h, alpha=0.2, linewidth=2, fill=False,
                                          edgecolor='black')
+
                     axs.add_patch(rect)
+                    axs.text(mp[0], mp[1], '{}'.format(self.element_to_overloading[glob_elem_idx]), ha='center',
+                            va='center')
+                    glob_elem_idx += 1
         plt.xlim(self.mesh.mesh_per_level[0].knots[0][0], self.mesh.mesh_per_level[0].knots[0][-1])
-        plt.xlim(self.mesh.mesh_per_level[0].knots[1][0], self.mesh.mesh_per_level[0].knots[1][-1])
+        plt.ylim(self.mesh.mesh_per_level[0].knots[1][0], self.mesh.mesh_per_level[0].knots[1][-1])
+        plt.show()
         return fig
 
     def get_truncated_basis(self):
@@ -197,3 +207,21 @@ class HierarchicalSpace(object):
             functions.append(self.tensor_product_space_per_level[-1].get_function(C[:, i], index))
         return functions
 
+    def set_overloading(self):
+        """
+        Loops through each cell in the hierarchical mesh, and sets the number of active basis functions.
+        :return:
+        """
+
+        number_of_active_b_splines_per_active_element = defaultdict(int)
+        i = 0
+        b = self.get_truncated_basis()
+        for level in range(self.number_of_levels):
+            for cell in self.mesh.active_elements_per_level[level]:
+                elem = self.mesh.mesh_per_level[level].cells[cell]
+                for func in b:
+                    c = np.all((func.support[:, :, 0] <= elem[:, 0]) & (func.support[:, :, 1] >= elem[:, 1]), axis=1)
+                    if np.any(c):
+                        number_of_active_b_splines_per_active_element[i] += 1
+                i += 1
+        self.element_to_overloading = number_of_active_b_splines_per_active_element

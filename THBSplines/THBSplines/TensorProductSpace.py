@@ -1,3 +1,5 @@
+import numpy as np
+
 from THBSplines.THBSplines.SplineAux import generate_tensor_product_space, insert_midpoints, compute_knot_insertion_matrix, \
     set_basis_support_cells
 from THBSplines.THBSplines.TensorProductMesh import TensorProductMesh
@@ -53,4 +55,5 @@ class TensorProductSpace(object):
     def get_function(self, coefficients, index):
         def f(x):
             return sum([self.functions[i](x) * coefficients[i] for i in index])
+        f.support = np.array([self.functions[i].support for i in index]).reshape(-1, self.parametric_dim, 2)
         return f
