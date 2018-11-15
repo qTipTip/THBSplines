@@ -180,17 +180,19 @@ class HierarchicalSpace(object):
         fig = plt.figure()
         axs = fig.gca()
         glob_elem_idx = 0
+        max_active = np.prod([(d + 1) for d in self.tensor_product_space_per_level[0].degrees])
         for level in range(self.number_of_levels):
             for i, cell in enumerate(self.mesh.mesh_per_level[level].cells):
                 if i in self.mesh.active_elements_per_level[level]:
                     w, h = (cell[:, 1] - cell[:, 0])
                     mp = [cell[0, 0] + w / 2, cell[1, 0] + h / 2]
-                    rect = plp.Rectangle((cell[0, 0], cell[1, 0]), w, h, alpha=0.2, linewidth=2, fill=False,
+                    color = 'green' if self.element_to_overloading[glob_elem_idx] <= max_active else 'red'
+                    rect = plp.Rectangle((cell[0, 0], cell[1, 0]), w, h, color=color, alpha=0.2, linewidth=2, fill=True,
                                          edgecolor='black')
 
                     axs.add_patch(rect)
                     axs.text(mp[0], mp[1], '{}'.format(self.element_to_overloading[glob_elem_idx]), ha='center',
-                            va='center')
+                             va='center')
                     glob_elem_idx += 1
         plt.xlim(self.mesh.mesh_per_level[0].knots[0][0], self.mesh.mesh_per_level[0].knots[0][-1])
         plt.ylim(self.mesh.mesh_per_level[0].knots[1][0], self.mesh.mesh_per_level[0].knots[1][-1])
