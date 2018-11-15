@@ -1,6 +1,6 @@
 import numpy as np
 
-from THBSplines.src.TensorProductSpace import TensorProductSpace
+from THBSplines.THBSplines.TensorProductSpace import TensorProductSpace
 
 
 def test_univariate_space():

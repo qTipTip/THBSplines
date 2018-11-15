@@ -1,6 +1,6 @@
 import numpy as np
 
-from THBSplines.src.TensorProductMesh import TensorProductMesh
+from THBSplines.THBSplines.TensorProductMesh import TensorProductMesh
 
 
 def test_tensor_product_mesh_init():

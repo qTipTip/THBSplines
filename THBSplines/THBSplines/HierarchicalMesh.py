@@ -1,5 +1,5 @@
-from THBSplines.src import TensorProductMesh
-from THBSplines.src.SplineAux import set_children_of_cells
+from THBSplines.THBSplines import TensorProductMesh
+from THBSplines.THBSplines.SplineAux import set_children_of_cells
 
 
 class HierarchicalMesh(object):

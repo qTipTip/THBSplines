@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from THBSplines.src.HierarchicalMesh import HierarchicalMesh
-from THBSplines.src.TensorProductMesh import TensorProductMesh
+from THBSplines.THBSplines.HierarchicalMesh import HierarchicalMesh
+from THBSplines.THBSplines.TensorProductMesh import TensorProductMesh
 
 
 @pytest.fixture

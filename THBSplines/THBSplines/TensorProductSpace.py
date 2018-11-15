@@ -1,6 +1,6 @@
-from THBSplines.src.SplineAux import generate_tensor_product_space, insert_midpoints, compute_knot_insertion_matrix, \
+from THBSplines.THBSplines.SplineAux import generate_tensor_product_space, insert_midpoints, compute_knot_insertion_matrix, \
     set_basis_support_cells
-from THBSplines.src.TensorProductMesh import TensorProductMesh
+from THBSplines.THBSplines.TensorProductMesh import TensorProductMesh
 
 
 class TensorProductSpace(object):

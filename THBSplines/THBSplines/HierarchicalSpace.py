@@ -1,7 +1,7 @@
 import numpy as np
 
-from THBSplines.src.HierarchicalMesh import HierarchicalMesh
-from THBSplines.src.TensorProductSpace import TensorProductSpace
+from THBSplines.THBSplines.HierarchicalMesh import HierarchicalMesh
+from THBSplines.THBSplines.TensorProductSpace import TensorProductSpace
 
 
 class HierarchicalSpace(object):

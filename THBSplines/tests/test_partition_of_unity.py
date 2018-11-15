@@ -1,8 +1,8 @@
 import numpy as np
 
-from THBSplines.src.HierarchicalMesh import HierarchicalMesh
-from THBSplines.src.HierarchicalSpace import HierarchicalSpace
-from THBSplines.src.TensorProductSpace import TensorProductSpace
+from THBSplines.THBSplines.HierarchicalMesh import HierarchicalMesh
+from THBSplines.THBSplines.HierarchicalSpace import HierarchicalSpace
+from THBSplines.THBSplines.TensorProductSpace import TensorProductSpace
 
 
 def test_partition_of_unity_univariate():

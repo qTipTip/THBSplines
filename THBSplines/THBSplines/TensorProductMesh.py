@@ -1,6 +1,6 @@
 import numpy as np
 
-from THBSplines.src.SplineAux import generate_cells
+from THBSplines.THBSplines.SplineAux import generate_cells
 
 
 def insert_midpoints_mesh(knots):
