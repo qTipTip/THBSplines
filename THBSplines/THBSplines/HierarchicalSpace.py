@@ -9,6 +9,7 @@ from THBSplines.THBSplines.TensorProductSpace import TensorProductSpace
 class HierarchicalSpace(object):
 
     def __init__(self, hierarchical_mesh: HierarchicalMesh, tensor_product_space: TensorProductSpace):
+        self.hierarchical_mesh_cells = hierarchical_mesh.mesh_per_level[0].cells
         self.truncated = True
         self.number_of_levels = 1
         self.number_of_functions = tensor_product_space.nfunctions
@@ -20,6 +21,7 @@ class HierarchicalSpace(object):
         self.physical_dim = tensor_product_space.physical_dim
         self.mesh = hierarchical_mesh
         self.projectors = {}
+        self.set_overloading()
 
     def add_new_level(self):
         if self.number_of_levels == self.mesh.number_of_levels - 1:
@@ -47,7 +49,8 @@ class HierarchicalSpace(object):
             marked_functions = self.functions_to_deactivate_from_neighbours(marked_entities)
 
         self.refine_hierarchical_space(marked_functions, NE)
-
+        self.update_hierarchical_mesh()
+        self.set_overloading()
     def get_children(self, marked_functions, level):
         children = set()
         for function in marked_functions:
@@ -62,7 +65,6 @@ class HierarchicalSpace(object):
         n = self.number_of_levels
         if marked_cells[n - 1] != set():
             self.mesh.add_new_level()
-
         return self.update_active_cells(marked_cells)
 
     def update_active_cells(self, marked_cells):
@@ -179,21 +181,17 @@ class HierarchicalSpace(object):
         self.set_overloading()
         fig = plt.figure()
         axs = fig.gca()
-        glob_elem_idx = 0
         max_active = np.prod([(d + 1) for d in self.tensor_product_space_per_level[0].degrees])
-        for level in range(self.number_of_levels):
-            for i, cell in enumerate(self.mesh.mesh_per_level[level].cells):
-                if i in self.mesh.active_elements_per_level[level]:
-                    w, h = (cell[:, 1] - cell[:, 0])
-                    mp = [cell[0, 0] + w / 2, cell[1, 0] + h / 2]
-                    color = 'green' if self.element_to_overloading[glob_elem_idx] <= max_active else 'red'
-                    rect = plp.Rectangle((cell[0, 0], cell[1, 0]), w, h, color=color, alpha=0.2, linewidth=2, fill=True,
-                                         edgecolor='black')
+        for i, cell in enumerate(self.hierarchical_mesh_cells):
+            w, h = (cell[:, 1] - cell[:, 0])
+            mp = [cell[0, 0] + w / 2, cell[1, 0] + h / 2]
+            color = 'green' if self.element_to_overloading[i] <= max_active else 'red'
+            rect = plp.Rectangle((cell[0, 0], cell[1, 0]), w, h, color=color, alpha=0.2, linewidth=2, fill=True,
+                                 edgecolor='black')
 
-                    axs.add_patch(rect)
-                    axs.text(mp[0], mp[1], '{}'.format(self.element_to_overloading[glob_elem_idx]), ha='center',
-                             va='center')
-                    glob_elem_idx += 1
+            axs.add_patch(rect)
+            axs.text(mp[0], mp[1], '{}'.format(self.element_to_overloading[i]), ha='center',
+                     va='center')
         plt.xlim(self.mesh.mesh_per_level[0].knots[0][0], self.mesh.mesh_per_level[0].knots[0][-1])
         plt.ylim(self.mesh.mesh_per_level[0].knots[1][0], self.mesh.mesh_per_level[0].knots[1][-1])
         plt.show()
@@ -216,14 +214,32 @@ class HierarchicalSpace(object):
         """
 
         number_of_active_b_splines_per_active_element = defaultdict(int)
-        i = 0
         b = self.get_truncated_basis()
-        for level in range(self.number_of_levels):
-            for cell in self.mesh.active_elements_per_level[level]:
-                elem = self.mesh.mesh_per_level[level].cells[cell]
-                for func in b:
-                    c = np.all((func.support[:, :, 0] <= elem[:, 0]) & (func.support[:, :, 1] >= elem[:, 1]), axis=1)
-                    if np.any(c):
-                        number_of_active_b_splines_per_active_element[i] += 1
-                i += 1
+        for i, elem in enumerate(self.hierarchical_mesh_cells):
+            for func in b:
+                c = np.all((func.support[:, :, 0] <= elem[:, 0]) & (func.support[:, :, 1] >= elem[:, 1]), axis=1)
+                if np.any(c):
+                    number_of_active_b_splines_per_active_element[i] += 1
+            i += 1
         self.element_to_overloading = number_of_active_b_splines_per_active_element
+
+    def refine_in_rectangle(self, rectangle, level):
+        """
+        Returns the set active of indices marked for refinement contained in the given rectangle
+        :param rectangle:
+        :param level:
+        :return:
+        """
+        cells = self.mesh.mesh_per_level[level].cells
+        active_cells = cells[list(self.mesh.active_elements_per_level[level])]
+
+        cells_to_mark = np.all((rectangle[:, 0] <= active_cells[:, :, 0]) & (rectangle[:, 1] >= active_cells[:, :, 1]),
+                               axis=1)
+        return set(np.flatnonzero((cells_to_mark)))
+
+    def update_hierarchical_mesh(self):
+        elems = []
+        for level in range(self.number_of_levels):
+            for i in self.mesh.active_elements_per_level[level]:
+                elems.append(self.mesh.mesh_per_level[level].cells[i])
+        self.hierarchical_mesh_cells = np.array(elems, dtype=np.float64)
