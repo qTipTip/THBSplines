@@ -62,7 +62,8 @@ class HierarchicalMesh(Mesh):
 
         for level in range(number_of_levels):
             if level in marked_cells:
-                marked_active_elements = np.where(np.in1d(marked_cells[level], self.aelem_level[level]))
+                i = np.flatnonzero(np.in1d(marked_cells[level], self.aelem_level[level]))
+                marked_active_elements = np.take(marked_cells[level], i)
                 self.aelem_level[level] = np.setdiff1d(self.aelem_level[level], marked_active_elements).astype(np.int)
                 self.delem_level[level] = np.union1d(self.delem_level[level], marked_cells[level]).astype(np.int)
 
@@ -84,7 +85,7 @@ class HierarchicalMesh(Mesh):
             i = np.flatnonzero(np.all((cell[:, 0] <= fine_cells[:, :, 0]) & (cell[:, 1] >= fine_cells[:, :, 1]),
                                       axis=1))
             children = np.union1d(children, i)
-        return children
+        return children.astype(np.int)
 
 
 if __name__ == '__main__':
