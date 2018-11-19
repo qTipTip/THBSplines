@@ -1,3 +1,4 @@
+from functools import reduce
 from typing import Union, List
 
 import numpy as np
@@ -30,6 +31,8 @@ class HierarchicalSpace(Space):
         self.nfuncs_level = {0: self.spaces[0].nfuncs}
         self.nfuncs = self.nfuncs_level[0]
         self.projections = []
+        self.afunc = np.array([], np.int)
+        self.dfunc = np.array([], np.int)
 
     def refine(self, marked_entities: dict, new_cells: dict) -> np.ndarray:
         """
@@ -51,9 +54,9 @@ class HierarchicalSpace(Space):
             self.spaces.append(refined_space)
             self.projections.append(projector)
             self.nlevels += 1
-            self.afunc_level[self.mesh.nlevels] = np.array([], dtype=np.int)
-            self.dfunc_level[self.mesh.nlevels] = np.array([], dtype=np.int)
-            self.nfuncs_level[self.mesh.nlevels] = 0
+            self.afunc_level[self.mesh.nlevels - 1] = np.array([], dtype=np.int)
+            self.dfunc_level[self.mesh.nlevels - 1] = np.array([], dtype=np.int)
+            self.nfuncs_level[self.mesh.nlevels - 1] = 0
         else:
             raise ValueError('Non-compatible mesh and space levels')
 
@@ -72,7 +75,28 @@ class HierarchicalSpace(Space):
             dfunc[level] = np.union1d(marked_entities[level], dfunc[level])
 
             children = self.get_children(level, marked_entities[level])
-            # TODO: I am working here currently.
+
+            active_and_deactive = np.union1d(afunc[level + 1], dfunc[level + 1])
+            next_level_afunc = np.setdiff1d(children, active_and_deactive)
+            afunc[level + 1] = np.union1d(afunc[level + 1], next_level_afunc)
+
+            new_possible_afunc = self.spaces[level + 1].get_basis_functions(new_cells[level + 1])
+            new_possible_afunc = np.setdiff1d(new_possible_afunc, afunc[level + 1])
+            _, new_possible_cells = self.spaces[level + 1].get_cells(new_possible_afunc)
+            aelem_and_delem = np.union1d(self.mesh.aelem_level[level + 1], self.mesh.delem_level[level + 1])
+
+            new_functions = np.array([
+                i for i in new_possible_cells if np.all(np.isin(new_possible_cells[i], aelem_and_delem))
+            ], dtype=np.int)
+            afunc[level + 1] = np.union1d(afunc[level + 1], new_functions)
+
+        # TODO: Not sure if the two following lines are needed
+        self.afunc = reduce(np.union1d, *afunc.values())
+        self.dfunc = reduce(np.union1d, *dfunc.values())
+
+        self.nfuncs_level = [len(self.afunc_level[level]) if level in self.afunc_level else 0 for level in
+                             range(self.nlevels)]
+        self.nfuncs = sum(self.nfuncs_level)
 
     def get_children(self, level, marked_functions_at_level):
         children = np.array([], dtype=np.int)
@@ -91,7 +115,9 @@ if __name__ == '__main__':
     d = 2
     degrees = [1, 1]
     T = HierarchicalSpace(knots, degrees, d)
-    marked_cells = {0: [0, 1, 2, 3]}
+    marked_cells = {0: [0, 1, 2, 3, 4]}
     new_cells = T.mesh.refine(marked_cells)
-    marked_funcs = {0: [0, 1, 2, 3]}
+    T.mesh.plot_cells()
+    marked_funcs = {0:[1, 2, 3, 4]}
     T.refine(marked_funcs, new_cells)
+    T.mesh.plot_cells()

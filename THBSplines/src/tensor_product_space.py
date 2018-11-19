@@ -118,13 +118,33 @@ class TensorProductSpace(Space):
         :return: numpy array containing the indices of basis functions.
         """
 
-        basis = np.ndarray([], dtype=np.int)
+        basis = np.array([], dtype=np.int)
 
-        for cell in cell_list:
+        for cell_idx in cell_list:
+            cell = self.mesh.cells[cell_idx]
             condition = (self.basis_supports[:, :, 0] <= cell[:, 0]) & (self.basis_supports[:, :, 1] >= cell[:, 1])
             i = np.flatnonzero(np.all(condition, axis=1))
             basis = np.union1d(basis, i)
         return basis
+
+    def get_cells(self, basis_function_list: np.ndarray) -> Tuple[np.ndarray, dict]:
+        """
+        Given a list of indices corresponding to basis functions, return the union of the support-cells,
+        and a dictionary mapping basis_function to cell index.
+        :param basis_function_list:
+        :return:
+        """
+
+        cells = np.array([], dtype=np.int)
+        cells_map = {}
+
+        for func in basis_function_list:
+            supp = self.basis_supports[func]
+            condition = (self.mesh.cells[:, :, 0] <= supp[:, 0]) & (self.mesh.cells[:, :, 1] >= supp[:, 1])
+            i = np.flatnonzero(np.all(condition, axis=1))
+            cells = np.union1d(cells, i)
+            cells_map[func] = i
+        return cells, cells_map
 
 
 def insert_midpoints(knots, p):
