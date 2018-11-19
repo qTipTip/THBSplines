@@ -35,8 +35,10 @@ class HierarchicalMesh(Mesh):
 
         if self.nlevels - 1 in marked_cells:
             self.add_level()
-        old_active_cells = self.aelem_level
+        # old_active_cells = self.aelem_level
         new_elements = self.update_active_cells(marked_cells)
+
+        return new_elements
 
     def update_active_cells(self, marked_cells):
         """
@@ -49,7 +51,6 @@ class HierarchicalMesh(Mesh):
         new_cells = {}
 
         for level in range(number_of_levels):
-            print(level)
             if level in marked_cells:
                 marked_active_elements = np.where(np.in1d(marked_cells[level], self.aelem_level[level]))
                 self.aelem_level[level] = np.setdiff1d(self.aelem_level[level], marked_active_elements)
@@ -61,6 +62,8 @@ class HierarchicalMesh(Mesh):
         self.nel_per_level = [len(self.aelem_level[level]) if level in self.aelem_level else 0 for level in
                               range(self.nlevels)]
         self.nel = sum(self.nel_per_level)
+
+        return new_cells
 
     def get_children(self, level: int, marked_cells_at_level) -> np.ndarray:
         children = np.array([])
@@ -81,4 +84,4 @@ if __name__ == '__main__':
     dim = 2
     M = HierarchicalMesh(knots, dim)
     marked_cells = {0: [0, 1, 2, 3]}
-    M.refine(marked_cells)
+    print(M.refine(marked_cells))
