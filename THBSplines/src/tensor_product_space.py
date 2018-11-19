@@ -17,6 +17,7 @@ class TensorProductSpace(Space):
         self.basis = None
 
         self.construct_basis()
+        self.nfuncs = len(self.basis)
 
     def cell_to_basis(self, cell_indices: Union[np.ndarray, List[int]]) -> np.ndarray:
         basis_idx = []
@@ -59,7 +60,7 @@ class TensorProductSpace(Space):
         for i in range(n):
             new_knots = []
             for j in range(dim):
-                new_knots.append(knots[j][idx_start_perm[i, j]: idx_stop_perm[i, j]])
+                new_knots.append(self.knots[j][idx_start_perm[i, j]: idx_stop_perm[i, j]])
             new_b_spline = BSpline(degrees, new_knots)
             new_b_spline.tensor_product_indices = idx_start_perm[i]
             b_splines.append(new_b_spline)
