@@ -1,8 +1,8 @@
-from typing import Union, List
+from typing import Union, List, Tuple
 
 import numpy as np
 from THBSplines.src.abstract_space import Space
-from THBSplines.src.b_spline import BSpline
+from THBSplines.src.b_spline import BSpline, augment_knots, find_knot_index
 from THBSplines.src.cartesian_mesh import CartesianMesh
 
 
@@ -67,6 +67,68 @@ class TensorProductSpace(Space):
             b_support[i] = [[new_knots[j][0], new_knots[j][-1]] for j in range(dim)]
         self.basis = np.array(b_splines)
         self.basis_supports = b_support
+
+    def refine(self) -> Tuple["TensorProductSpace", np.ndarray]:
+        """
+        Refine the space by dyadically inserting midpoints in the knot vectors, and computing the knot-insertion
+        matrix (the projection matrix form coarse to fine space).
+        :return:
+        """
+
+        coarse_knots = self.knots
+        fine_knots = [insert_midpoints(knot_vector, degree) for knot_vector, degree in zip(self.knots, self.degrees)]
+
+        projection = self.compute_projection_matrix(coarse_knots, fine_knots, self.degrees)
+        fine_space = TensorProductSpace(fine_knots, self.degrees, self.dim)
+
+        return fine_space, projection
+
+    @staticmethod
+    def compute_projection_matrix(coarse_knots, fine_knots, degrees):
+        matrices = []
+        for fine, coarse, degree in zip(fine_knots, coarse_knots, degrees):
+            coarse = augment_knots(coarse, degree)
+            fine = augment_knots(fine, degree)
+            m = len(fine) - (degree + 1)
+            n = len(coarse) - (degree + 1)
+
+            a = np.zeros(shape=(m, n))
+            fine = np.array(fine, dtype=np.float64)
+            coarse = np.array(coarse, dtype=np.float64)
+            for i in range(m):
+                mu = find_knot_index(fine[i], coarse)
+                b = 1
+                for k in range(1, degree + 1):
+                    tau1 = coarse[mu - k + 1:mu + 1]
+                    tau2 = coarse[mu + 1:mu + k + 1]
+                    omega = (fine[i + k] - tau1) / (tau2 - tau1)
+                    b = np.append((1 - omega) * b, 0) + np.insert((omega * b), 0, 0)
+                a[i, mu - degree:mu + 1] = b
+            matrices.append(a[degree + 1:-degree - 1, degree + 1:-degree - 1])
+        a = matrices[0]
+        for matrix in matrices[1:]:
+            a = np.kron(a, matrix)
+        return a
+
+
+def insert_midpoints(knots, p):
+    """
+    Inserts midpoints in all interior knot intervals of a p+1 regular knot vector.
+    :param s:
+    :param knots: p + 1 regular knot vector to be refined
+    :param p: spline degree
+    :return: refined_knots
+    """
+
+    knots = np.array(knots, dtype=np.float64)
+    midpoints = (knots[p:-p - 1] + knots[p + 1:-p]) / 2
+    new_array = np.zeros(len(knots) + len(midpoints), dtype=np.float64)
+
+    new_array[:p + 1] = knots[:p + 1]
+    new_array[-p - 1:] = knots[-p - 1]
+    new_array[p + 1:p + 2 * len(midpoints):2] = midpoints
+    new_array[p + 2:p + 2 * len(midpoints) - 1:2] = knots[p + 1:-p - 1]
+    return new_array
 
 
 if __name__ == '__main__':
