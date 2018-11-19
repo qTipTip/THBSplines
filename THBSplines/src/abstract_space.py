@@ -15,3 +15,13 @@ class Space(ABC):
         :return:
         """
         pass
+
+    @abstractmethod
+    def basis_to_cell(self, basis_indices: Union[np.ndarray, List[int]]) -> np.ndarray:
+        """
+        Given a list of N basis-indices, return a list of N lists, such that the i'th list gives the indices of the cells
+        supporting over basis i.
+        :param basis_indices:
+        :return:
+        """
+        pass
