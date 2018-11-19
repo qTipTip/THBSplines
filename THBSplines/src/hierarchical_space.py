@@ -107,6 +107,7 @@ class HierarchicalSpace(Space):
         return children
 
 
+
 if __name__ == '__main__':
     knots = [
         [0, 0, 1, 2, 3, 3],
