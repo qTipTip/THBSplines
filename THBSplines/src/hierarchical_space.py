@@ -1,9 +1,10 @@
 from typing import Union, List
 
 import numpy as np
-from src.abstract_space import Space
-from src.hierarchical_mesh import HierarchicalMesh
-from src.tensor_product_space import TensorProductSpace
+
+from abstract_space import Space
+from hierarchical_mesh import HierarchicalMesh
+from tensor_product_space import TensorProductSpace
 
 
 class HierarchicalSpace(Space):
