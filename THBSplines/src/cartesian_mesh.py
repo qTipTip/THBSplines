@@ -20,6 +20,7 @@ class CartesianMesh(Mesh):
         self.knots = np.array([np.unique(knot_v) for knot_v in knots])
         self.dim = parametric_dimension
         self.cells = self.compute_cells()
+        self.nelems = len(self.cells)
 
     def compute_cells(self) -> np.ndarray:
         """
