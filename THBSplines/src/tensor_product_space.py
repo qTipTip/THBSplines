@@ -1,6 +1,7 @@
 from typing import Union, List, Tuple
 
 import numpy as np
+
 from THBSplines.src.abstract_space import Space
 from THBSplines.src.b_spline import BSpline, augment_knots, find_knot_index
 from THBSplines.src.cartesian_mesh import CartesianMesh
@@ -109,6 +110,21 @@ class TensorProductSpace(Space):
         for matrix in matrices[1:]:
             a = np.kron(a, matrix)
         return a
+
+    def get_basis_functions(self, cell_list: np.ndarray) -> np.ndarray:
+        """
+        Returns the indices of basis functions supported over the given list of cells.
+        :param cell_list: Numpy array containing the indices of cells.
+        :return: numpy array containing the indices of basis functions.
+        """
+
+        basis = np.ndarray([], dtype=np.int)
+
+        for cell in cell_list:
+            condition = (self.basis_supports[:, :, 0] <= cell[:, 0]) & (self.basis_supports[:, :, 1] >= cell[:, 1])
+            i = np.flatnonzero(np.all(condition, axis=1))
+            basis = np.union1d(basis, i)
+        return basis
 
 
 def insert_midpoints(knots, p):
