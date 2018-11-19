@@ -1,4 +1,3 @@
-import itertools
 from typing import Union, List
 
 import numpy as np
@@ -24,9 +23,21 @@ class TensorProductSpace(Space):
         for cell_idx in cell_indices:
             cell = self.mesh.cells[cell_idx]
             i = np.flatnonzero(
-                np.all((self.basis_supports[:, :, 0] <= cell[:, 0]) & (self.basis_supports[:, :, 1] >= cell[:, 1]), axis=1))
+                np.all((self.basis_supports[:, :, 0] <= cell[:, 0]) & (self.basis_supports[:, :, 1] >= cell[:, 1]),
+                       axis=1))
             basis_idx.append(i)
         return np.array(basis_idx)
+
+    def basis_to_cell(self, basis_indices: Union[np.ndarray, List[int]]) -> np.ndarray:
+        cell_indices = []
+        for basis_idx in basis_indices:
+            basis_supp = self.basis_supports[basis_idx]
+            i = np.flatnonzero(
+                np.all(
+                    (basis_supp[:, 0] <= self.mesh.cells[:, :, 0]) & (basis_supp[:, 1] >= self.mesh.cells[:, :, 1]),
+                    axis=1))
+            cell_indices.append(i)
+        return np.array(cell_indices)
 
     def construct_basis(self):
         degrees = self.degrees
@@ -59,7 +70,7 @@ class TensorProductSpace(Space):
 
 if __name__ == '__main__':
     knots = [
-        [0, 0, 1, 2, 3, 4, 5, 5],
+        [0, 1, 2, 3, 4, 5, 5],
         [0, 0, 1, 2, 3, 4, 5, 5]
     ]
     d = [1, 1]
@@ -67,5 +78,6 @@ if __name__ == '__main__':
 
     T = TensorProductSpace(knots, d, dim)
 
-    c = [0]
+    c = [0, 1, 2]
     print(T.cell_to_basis(c))
+    print(T.basis_to_cell(c))
