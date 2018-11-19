@@ -26,9 +26,12 @@ class CartesianMesh(Mesh):
         Computes an array of cells, represented as AABBs with each cell as [[min1, max1], [min2, max2], ..., ]
         :return: a list of N cells of shape (N, dim, 2).
         """
-        cells_bottom_left = np.stack(np.meshgrid(*self.knots[:, :-1]), -1).reshape(-1, self.dim)
-        cells_top_right = np.stack(np.meshgrid(*self.knots[:, 1:]), -1).reshape(-1, self.dim)
+        knots_left = [k[:-1] for k in self.knots]
+        knots_right = [k[1:] for k in self.knots]
+        cells_bottom_left = np.stack(np.meshgrid(*knots_left), -1).reshape(-1, self.dim)
+        cells_top_right = np.stack(np.meshgrid(*knots_right), -1).reshape(-1, self.dim)
         cells = np.concatenate((cells_bottom_left, cells_top_right), axis=1).reshape(-1, self.dim, 2)
+        cells = np.swapaxes(cells, 1, 2)
         return cells
 
     def refine(self) -> 'CartesianMesh':
