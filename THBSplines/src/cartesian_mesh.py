@@ -31,11 +31,21 @@ class CartesianMesh(Mesh):
         cells = np.concatenate((cells_bottom_left, cells_top_right), axis=1).reshape(-1, self.dim, 2)
         return cells
 
+    def refine(self) -> 'CartesianMesh':
+        """
+        Dyadic refinement of the mesh, by inserting midpoints in each knot vector.
+        :return: a refined CartesianMesh object.
+        """
+        refined_knots = np.array([
+            np.sort(np.concatenate((knot_v, (knot_v[1:] + knot_v[:-1]) / 2))) for knot_v in self.knots
+        ])
+        return CartesianMesh(refined_knots, self.dim)
+
 
 if __name__ == '__main__':
     knots = [
         [0, 1, 2],
-        [0, 1, 2],
         [0, 1, 2]
     ]
-    C = CartesianMesh(knots, 3)
+    C = CartesianMesh(knots, 2)
+    C1 = C.refine().refine().refine()
