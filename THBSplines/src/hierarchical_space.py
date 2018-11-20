@@ -2,7 +2,6 @@ from functools import reduce
 from typing import Union, List
 
 import numpy as np
-
 from abstract_space import Space
 from hierarchical_mesh import HierarchicalMesh
 from tensor_product_space import TensorProductSpace
@@ -34,19 +33,19 @@ class HierarchicalSpace(Space):
         self.afunc = np.array([], np.int)
         self.dfunc = np.array([], np.int)
 
-    def refine(self, marked_entities: dict, new_cells: dict) -> np.ndarray:
+    def refine(self, marked_functions: dict, new_cells: dict) -> np.ndarray:
         """
         Refine the hierarchical space, and return the projection matrix to pass from coarse space to refined space.
-        :param marked_entities: marked functions/cells to refine
+        :param marked_functions: marked functions/cells to refine
         :param new_cells: global indices of new active cells for each level, as returned by ``HierarchicalMesh.refine``.
         :return: np.ndarray
         """
 
         if len(self.spaces) < self.mesh.nlevels:
             self.add_level()
-            marked_entities[self.mesh.nlevels] = np.array([], dtype=np.int)
+            marked_functions[self.mesh.nlevels] = np.array([], dtype=np.int)
 
-        self.update_active_functions(marked_entities, new_cells)
+        self.update_active_functions(marked_functions, new_cells)
 
     def add_level(self):
         if len(self.spaces) == self.mesh.nlevels - 1:
@@ -91,11 +90,11 @@ class HierarchicalSpace(Space):
             afunc[level + 1] = np.union1d(afunc[level + 1], new_functions)
 
         # TODO: Not sure if the two following lines are needed
-        self.afunc = reduce(np.union1d, *afunc.values())
-        self.dfunc = reduce(np.union1d, *dfunc.values())
+        self.afunc = reduce(np.union1d, afunc.values())
+        self.dfunc = reduce(np.union1d, dfunc.values())
 
-        self.nfuncs_level = [len(self.afunc_level[level]) if level in self.afunc_level else 0 for level in
-                             range(self.nlevels)]
+        self.nfuncs_level = {level : len(self.afunc_level[level]) if level in self.afunc_level else 0 for level in
+                             range(self.nlevels)}
         self.nfuncs = sum(self.nfuncs_level)
 
     def get_children(self, level, marked_functions_at_level):
@@ -106,6 +105,26 @@ class HierarchicalSpace(Space):
             children = np.union1d(children, c)
         return children
 
+    def functions_to_deactivate_from_cells(self, marked_cells: dict):
+        """
+        Returns the indices of functions that have no active cells within their support.
+        :param marked_cells: cell indices to check against
+        :return: function indices
+        """
+        marked_functions = {}
+        for level in range(self.nlevels):
+            func_to_deact = self.spaces[level].get_basis_functions(marked_cells[level])
+            func_to_deact = np.intersect1d(func_to_deact, self.afunc_level[level])
+
+            func_to_keep = np.array([], dtype=np.int)
+            _, func_cells_map = self.spaces[level].get_cells(func_to_deact)
+            for f in func_to_deact:
+                func_cells = func_cells_map[f]
+                if np.intersect1d(func_cells, self.afunc_level[level]).size != 0:
+                    func_to_keep = np.append(func_to_keep, f)
+            func_to_deact = np.setdiff1d(func_to_deact, func_to_keep)
+            marked_functions[level] = func_to_deact
+        return marked_functions
 
 
 if __name__ == '__main__':
@@ -119,6 +138,6 @@ if __name__ == '__main__':
     marked_cells = {0: [0, 1, 2, 3, 4]}
     new_cells = T.mesh.refine(marked_cells)
     T.mesh.plot_cells()
-    marked_funcs = {0:[1, 2, 3, 4]}
+    marked_funcs = {0: [1, 2, 3, 4]}
     T.refine(marked_funcs, new_cells)
     T.mesh.plot_cells()

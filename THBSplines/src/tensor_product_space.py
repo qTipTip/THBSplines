@@ -1,7 +1,6 @@
 from typing import Union, List, Tuple
 
 import numpy as np
-
 from THBSplines.src.abstract_space import Space
 from THBSplines.src.b_spline import BSpline, augment_knots, find_knot_index
 from THBSplines.src.cartesian_mesh import CartesianMesh
