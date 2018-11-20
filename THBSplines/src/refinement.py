@@ -13,6 +13,12 @@ def refine(hspace: HierarchicalSpace, marked_entities, type='cells') -> Hierarch
     marked_functions = hspace.functions_to_deactivate_from_cells(marked_cells)
     hspace.refine(marked_functions, new_cells)
 
+    print("""
+    After refinement, the space has
+    ===============================
+    space.nfuncs = {}
+    space.nelems = {}
+    """.format(hspace.nfuncs, hspace.mesh.nel))
     return hspace
 
 
@@ -29,3 +35,4 @@ if __name__ == '__main__':
     marked_cells = {0: [0, 1, 2, 3, 4, 5, 6], 1: [0, 1, 2, 3, 4, 5, 6]}
     T = refine(T, marked_cells)
     T.mesh.plot_cells()
+    print(T)

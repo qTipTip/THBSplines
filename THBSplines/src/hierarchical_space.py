@@ -95,7 +95,7 @@ class HierarchicalSpace(Space):
 
         self.nfuncs_level = {level : len(self.afunc_level[level]) if level in self.afunc_level else 0 for level in
                              range(self.nlevels)}
-        self.nfuncs = sum(self.nfuncs_level)
+        self.nfuncs = sum(self.nfuncs_level.values())
 
     def get_children(self, level, marked_functions_at_level):
         children = np.array([], dtype=np.int)

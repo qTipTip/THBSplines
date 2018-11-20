@@ -24,6 +24,8 @@ class HierarchicalMesh(Mesh):
         self.nlevels = 1
         self.aelem_level = {0: np.array((range(self.meshes[0].nelems)), dtype=np.int)}  # active elements on level
         self.delem_level = {0: np.array([], dtype=np.int)}  # deactivated elements on level
+        self.nel_per_level = {0: self.meshes[0].nelems}
+        self.nel = self.meshes[0].nelems
 
     def add_level(self):
         """
@@ -71,9 +73,9 @@ class HierarchicalMesh(Mesh):
                 self.aelem_level[level + 1] = np.union1d(self.aelem_level[level + 1], new_cells[level + 1]).astype(
                     np.int)
 
-        self.nel_per_level = [len(self.aelem_level[level]) if level in self.aelem_level else 0 for level in
-                              range(self.nlevels)]
-        self.nel = sum(self.nel_per_level)
+        self.nel_per_level = {level: len(self.aelem_level[level]) if level in self.aelem_level else 0 for level in
+                              range(self.nlevels)}
+        self.nel = sum(self.nel_per_level.values())
 
         return new_cells
 
