@@ -32,6 +32,7 @@ class HierarchicalSpace(Space):
         self.projections = []
         self.afunc = np.array([], np.int)
         self.dfunc = np.array([], np.int)
+        self.truncated = True
 
     def refine(self, marked_functions: dict, new_cells: dict) -> np.ndarray:
         """
@@ -50,6 +51,7 @@ class HierarchicalSpace(Space):
     def add_level(self):
         if len(self.spaces) == self.mesh.nlevels - 1:
             refined_space, projector = self.spaces[self.mesh.nlevels - 2].refine()
+
             self.spaces.append(refined_space)
             self.projections.append(projector)
             self.nlevels += 1
@@ -58,6 +60,14 @@ class HierarchicalSpace(Space):
             self.nfuncs_level[self.mesh.nlevels - 1] = 0
         else:
             raise ValueError('Non-compatible mesh and space levels')
+
+    def get_basis_conversion_matrix(self, level):
+
+        c = self.projections[level]
+        if self.truncated:
+            i = np.union1d(self.afunc_level[level], self.dfunc_level[level])
+            c[i, :] = 0
+        return c
 
     def update_active_functions(self, marked_entities: dict, new_cells: dict):
         """

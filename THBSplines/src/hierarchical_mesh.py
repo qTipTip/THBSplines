@@ -5,16 +5,20 @@ from cartesian_mesh import CartesianMesh
 
 
 class HierarchicalMesh(Mesh):
-    def plot_cells(self) -> None:
+    def plot_cells(self, return_fig = False) -> None:
         import matplotlib.pyplot as plt
 
+        fig = plt.figure()
         for level in range(self.nlevels):
             active_cells = self.meshes[level].cells[self.aelem_level[level]]
             for cell in active_cells:
                 x = cell[0, [0, 1, 1, 0, 0]]
                 y = cell[1, [0, 0, 1, 1, 0]]
                 plt.plot(x, y, color='black')
-        plt.show()
+        if return_fig:
+            return fig
+        else:
+            plt.show()
 
     def get_gauss_points(self, cell_indices: np.ndarray) -> np.ndarray:
         pass

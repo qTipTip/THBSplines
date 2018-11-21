@@ -1,6 +1,7 @@
 from typing import Union, List, Tuple
 
 import numpy as np
+
 from THBSplines.src.abstract_space import Space
 from THBSplines.src.b_spline import BSpline, augment_knots, find_knot_index
 from THBSplines.src.cartesian_mesh import CartesianMesh
@@ -145,7 +146,14 @@ class TensorProductSpace(Space):
             cells_map[func] = i
         return cells, cells_map
 
+    def construct_function(self, coefficients):
 
+        assert len(coefficients) == len(self.basis)
+
+        def f(x):
+            return sum([c*b(x) for c, b in zip(coefficients, self.basis)])
+
+        return f
 def insert_midpoints(knots, p):
     """
     Inserts midpoints in all interior knot intervals of a p+1 regular knot vector.
