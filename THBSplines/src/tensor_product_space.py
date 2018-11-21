@@ -140,7 +140,7 @@ class TensorProductSpace(Space):
 
         for func in basis_function_list:
             supp = self.basis_supports[func]
-            condition = (self.mesh.cells[:, :, 0] <= supp[:, 0]) & (self.mesh.cells[:, :, 1] >= supp[:, 1])
+            condition = (self.mesh.cells[:, :, 0] >= supp[:, 0]) & (self.mesh.cells[:, :, 1] <= supp[:, 1])
             i = np.flatnonzero(np.all(condition, axis=1))
             cells = np.union1d(cells, i)
             cells_map[func] = i
@@ -154,6 +154,7 @@ class TensorProductSpace(Space):
             return sum([c*b(x) for c, b in zip(coefficients, self.basis)])
 
         return f
+
 def insert_midpoints(knots, p):
     """
     Inserts midpoints in all interior knot intervals of a p+1 regular knot vector.
@@ -164,15 +165,10 @@ def insert_midpoints(knots, p):
     """
 
     knots = np.array(knots, dtype=np.float64)
-    midpoints = (knots[p:-p - 1] + knots[p + 1:-p]) / 2
-    new_array = np.zeros(len(knots) + len(midpoints), dtype=np.float64)
+    unique_knots = np.unique(knots)
+    midpoints = (unique_knots[:-1] + unique_knots[1:]) / 2
 
-    new_array[:p + 1] = knots[:p + 1]
-    new_array[-p - 1:] = knots[-p - 1]
-    new_array[p + 1:p + 2 * len(midpoints):2] = midpoints
-    new_array[p + 2:p + 2 * len(midpoints) - 1:2] = knots[p + 1:-p - 1]
-    return new_array
-
+    return np.sort(np.concatenate((knots, midpoints)))
 
 if __name__ == '__main__':
     knots = [
