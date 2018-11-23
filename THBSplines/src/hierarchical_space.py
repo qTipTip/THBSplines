@@ -171,15 +171,16 @@ class HierarchicalSpace(Space):
 
     def _get_overloading(self, all_cells):
         overloading = {i: 0 for i in range(len(all_cells))}  # element index to number of active functions
-        supp = self._get_supports_fine_level()
-        for level in range(self.nlevels):
-            for func in self.afunc_level[level]:
-                supp = self.spaces[level].basis_supports[func]
-                cells_in_support = np.flatnonzero(
-                    np.all((supp[:, 0] <= all_cells[:, :, 0]) & (supp[:, 1] >= all_cells[:, :, 1]), axis=1))
-                for i in cells_in_support:
-                    overloading[i] += 1
 
+        truncated_supports = self._get_truncated_supports()
+        for f in truncated_supports:
+            print(f, truncated_supports[f])
+        for i in truncated_supports:
+            supp_cells = truncated_supports[i]
+            for j, cell in enumerate(all_cells):
+                condition = np.all((supp_cells[:, :, 0] >= cell[:, 0]) & (supp_cells[:, :, 1] <= cell[:, 1]), axis=1)
+                if np.any(condition):
+                    overloading[j] += 1
         return overloading
 
     def create_subdivision_matrix(self, mode='reduced') -> dict:
@@ -223,13 +224,33 @@ class HierarchicalSpace(Space):
                 C[level] = sp.hstack([aux @ C[level - 1], I[:, self.afunc_level[level]]])
             return C
 
-    def _get_supports_fine_level(self):
+    def _get_truncated_supports(self):
         """
         Returns the indices at the fine level that constitutes the supports of each truncated basis function.
         :return:
         """
-        C = self.create_subdivision_matrix(mode='full')[self.nlevels-1].toarray()
-        print(C)
+        C = self.create_subdivision_matrix(mode='full')[self.nlevels - 1].toarray()
+        trunc_basis_to_fine_idx = {}
+        for i, trunc_coeff in enumerate(C.T):
+            fine_active_basis = np.flatnonzero(trunc_coeff)
+            basis_support_cells = self._get_fine_basis_support_cells(fine_active_basis)
+            trunc_basis_to_fine_idx[i] = self.mesh.meshes[-1].cells[basis_support_cells]
+        return trunc_basis_to_fine_idx
+
+    def _get_fine_basis_support_cells(self, fine_active_basis):
+        """
+        Given a list of functions, returns the unique cells at the finest level in their common support.
+        :param fine_active_basis:
+        :return:
+        """
+
+        cells = np.array([], dtype=np.int)
+        fine_cells = self.mesh.meshes[-1].cells
+        for i in fine_active_basis:
+            supp = self.spaces[-1].basis_supports[i]
+            condition = np.all((supp[:, 0] <= fine_cells[:, :, 0]) & (supp[:, 1] >= fine_cells[:, :, 1]), axis=1)
+            cells = np.union1d(cells, np.flatnonzero(condition))
+        return cells
 
 if __name__ == '__main__':
     knots = [
