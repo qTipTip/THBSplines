@@ -56,5 +56,5 @@ class TensorProductSpace(object):
         def f(x):
             return sum([self.functions[i](x) * coefficients[i] for i in index])
         f.support = np.array([self.functions[i].support for i in index]).reshape(-1, self.parametric_dim, 2)
-        f.greville_point = np.sum([self.functions[i].greville_point() for i in index]) / len(index)
+        f.greville_point = np.sum([self.functions[i].greville_point for i in index]) / len(index)
         return f

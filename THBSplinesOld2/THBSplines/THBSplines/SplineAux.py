@@ -129,6 +129,7 @@ class BSpline(object):
 
         return np.prod(evaluated_b_splines)
 
+    @property
     def greville_point(self):
         """
         Returns the greville point associated to this basis function.

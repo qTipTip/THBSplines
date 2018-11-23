@@ -1,0 +1,11 @@
+setup.py
+THBSplines/HierarchicalMesh.py
+THBSplines/HierarchicalSpace.py
+THBSplines/SplineAux.py
+THBSplines/TensorProductMesh.py
+THBSplines/TensorProductSpace.py
+THBSplines/__init__.py
+THBSplines/THBSplines.egg-info/PKG-INFO
+THBSplines/THBSplines.egg-info/SOURCES.txt
+THBSplines/THBSplines.egg-info/dependency_links.txt
+THBSplines/THBSplines.egg-info/top_level.txt
