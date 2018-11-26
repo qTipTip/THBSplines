@@ -172,6 +172,10 @@ def test_bilinear_mass_matrix():
           ], ])
     np.testing.assert_allclose(M, expected_M, atol=1.0e-5)
 
+    import matplotlib.pyplot as plt
+    plt.spy(M, markersize=1)
+    plt.show()
+    print(f"Mass matrix has determinand {np.linalg.det(M)} and condition number {np.linalg.cond(M)}")
 
 def test_local_mass_matrix_univariate():
     knots = [
