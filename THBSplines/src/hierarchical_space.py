@@ -67,7 +67,8 @@ class HierarchicalSpace(Space):
 
         c = self.projections[level]
         if self.truncated:
-            i = np.union1d(self.afunc_level[level], self.dfunc_level[level])
+            i = np.union1d(self.afunc_level[level+1], self.dfunc_level[level+1])
+
             c[i, :] = 0
         return c
 
@@ -193,7 +194,7 @@ class HierarchicalSpace(Space):
         mesh = self.mesh
 
         C = {}
-        C[0] = sp.identity(self.spaces[0].nfuncs, format='lil')
+        C[0] = np.identity(self.spaces[0].nfuncs)
         C[0] = C[0][:, self.afunc_level[0]]
 
         if mode == 'reduced':
@@ -202,8 +203,6 @@ class HierarchicalSpace(Space):
             func_on_deact_elements = np.union1d(func_on_deact_elements, func_on_active_elements)
 
             for level in range(1, self.nlevels):
-                # I = sp.identity(hspace.spaces[level].nfuncs, format='lil')
-                # I = I[:, hspace.afunc_level[level]]
 
                 I_row_idx = self.afunc_level[level]
                 I_col_idx = list(range(self.nfuncs_level[level]))
@@ -219,9 +218,9 @@ class HierarchicalSpace(Space):
             return C
         else:
             for level in range(1, self.nlevels):
-                I = sp.identity(self.spaces[level].nfuncs, format='lil')
-                aux = sp.lil_matrix(self.get_basis_conversion_matrix(level - 1))
-                C[level] = sp.hstack([aux @ C[level - 1], I[:, self.afunc_level[level]]])
+                I = np.identity(self.spaces[level].nfuncs)
+                aux = self.get_basis_conversion_matrix(level - 1)
+                C[level] = np.hstack([aux @ C[level - 1], I[:, self.afunc_level[level]]])
             return C
 
     def _get_truncated_supports(self):
