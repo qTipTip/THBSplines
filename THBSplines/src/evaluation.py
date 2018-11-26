@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.sparse as sp
-from src.hierarchical_space import HierarchicalSpace
-from src.refinement import refine
+from THBSplines.src.hierarchical_space import HierarchicalSpace
+from THBSplines.src.refinement import refine
 
 
 def create_subdivision_matrix(hspace: HierarchicalSpace, mode='reduced') -> dict:

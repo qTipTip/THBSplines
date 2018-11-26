@@ -1,4 +1,4 @@
-from src.hierarchical_space import HierarchicalSpace
+from THBSplines.src.hierarchical_space import HierarchicalSpace
 import logging
 
 

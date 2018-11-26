@@ -1,5 +1,5 @@
 import numpy as np
-from src.tensor_product_space import TensorProductSpace
+from THBSplines.src.tensor_product_space import TensorProductSpace
 
 
 def test_refine():

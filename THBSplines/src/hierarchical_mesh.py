@@ -1,6 +1,6 @@
 import numpy as np
-from src.abstract_mesh import Mesh
-from src.cartesian_mesh import CartesianMesh
+from THBSplines.src.abstract_mesh import Mesh
+from THBSplines.src.cartesian_mesh import CartesianMesh
 
 
 class HierarchicalMesh(Mesh):

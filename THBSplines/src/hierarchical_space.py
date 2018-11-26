@@ -3,9 +3,9 @@ from typing import Union, List
 
 import numpy as np
 import scipy.sparse as sp
-from src.abstract_space import Space
-from src.hierarchical_mesh import HierarchicalMesh
-from src.tensor_product_space import TensorProductSpace
+from THBSplines.src.hierarchical_mesh import HierarchicalMesh
+from THBSplines.src.tensor_product_space import TensorProductSpace
+from abstract_space import Space
 
 
 class HierarchicalSpace(Space):

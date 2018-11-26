@@ -1,7 +1,9 @@
 import numpy as np
+import pytest
 import scipy.integrate
-from src.hierarchical_space import HierarchicalSpace
-from src.refinement import refine
+
+from THBSplines.src.hierarchical_space import HierarchicalSpace
+from THBSplines.src.refinement import refine
 
 
 def integrate(bi, bj, points, weights):
@@ -116,6 +118,7 @@ def test_linear_mass_matrix():
     np.testing.assert_allclose(M, expected_M)
 
 
+@pytest.mark.slow
 def test_bilinear_mass_matrix():
     knots = [
         [0, 0, 1 / 3, 2 / 3, 1, 1],
@@ -124,13 +127,13 @@ def test_bilinear_mass_matrix():
     deg = [1, 1]
     dim = 2
 
-    T = HierarchicalSpace(knots, deg, dim)
+    t = HierarchicalSpace(knots, deg, dim)
     cells = {0: [1]}
-    T = refine(T, cells)
+    t = refine(t, cells)
 
-    M = hierarchical_mass_matrix(T)
+    m = hierarchical_mass_matrix(t)
 
-    expected_M = np.array(
+    expected_m = np.array(
         [[0.012346, 0.006173, 0.000000, 0.000000, 0.006173, 0.003086, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000,
           0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000],
          [0.006173, 0.018519, 0.000000, 0.000000, 0.003086, 0.009452, 0.000193, 0.000000, 0.000000, 0.000000, 0.000000,
@@ -170,12 +173,8 @@ def test_bilinear_mass_matrix():
          [.000000, 0.002315, 0.002315, 0.000000, 0.000000, 0.003858, 0.003858, 0.000000, 0.000000, 0.000000, 0.000000,
           0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.003086, 0.012346
           ], ])
-    np.testing.assert_allclose(M, expected_M, atol=1.0e-5)
+    np.testing.assert_allclose(m, expected_m, atol=1.0e-5)
 
-    import matplotlib.pyplot as plt
-    plt.spy(M, markersize=1)
-    plt.show()
-    print(f"Mass matrix has determinand {np.linalg.det(M)} and condition number {np.linalg.cond(M)}")
 
 def test_local_mass_matrix_univariate():
     knots = [

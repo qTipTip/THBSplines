@@ -1,6 +1,6 @@
 import numpy as np
-from src.hierarchical_space import HierarchicalSpace
-from src.refinement import refine
+from THBSplines.src.hierarchical_space import HierarchicalSpace
+from THBSplines.src.refinement import refine
 
 
 def test_active_funcs_per_level():
