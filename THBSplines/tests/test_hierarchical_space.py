@@ -42,3 +42,42 @@ def test_functions_to_deactivate_from_cells():
     marked_functions = T.functions_to_deactivate_from_cells(marked_cells)
 
     np.testing.assert_equal(marked_functions, {0: [0]})
+
+
+def test_subdivision_matrix_linear():
+    knots = [
+        [0, 0, 1, 2, 3, 3]
+    ]
+    d = [1]
+    dim = 1
+    T = HierarchicalSpace(knots, d, dim)
+    cells = {0: [1]}
+    T = refine(T, cells)
+
+    C = T.projections[0]
+
+    assert C.shape == (7, 4)
+    np.testing.assert_allclose(C, np.array([
+        [1, 0, 0, 0],
+        [0.5, 0.5, 0, 0],
+        [0, 1, 0, 0],
+        [0, 0.5, 0.5, 0],
+        [0, 0, 1, 0],
+        [0, 0, 0.5, 0.5],
+        [0, 0, 0, 1]]
+    ))
+
+
+def test_subdivision_matrix_bilinear():
+    knots = [
+        [0, 0, 1, 2, 3, 3],
+        [0, 0, 1, 2, 3, 3]
+    ]
+    d = [1, 1]
+    dim = 2
+    T = HierarchicalSpace(knots, d, dim)
+    cells = {0: [1]}
+    T = refine(T, cells)
+
+    C = T.projections[0]
+    assert C.shape == (49, 16)

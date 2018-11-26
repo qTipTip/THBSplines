@@ -32,7 +32,12 @@ class CartesianMesh(Mesh):
         cells_bottom_left = np.stack(np.meshgrid(*knots_left), -1).reshape(-1, self.dim)
         cells_top_right = np.stack(np.meshgrid(*knots_right), -1).reshape(-1, self.dim)
         cells = np.concatenate((cells_bottom_left, cells_top_right), axis=1).reshape(-1, self.dim, 2)
-        cells = np.swapaxes(cells, 1, 2)
+
+
+        # TODO: Make sure this edge case is not needed. For univariate meshes, the axes does NOT have to be swapped.
+        if self.dim != 1:
+            cells = np.swapaxes(cells, 1, 2)
+
         return cells
 
     def refine(self) -> 'CartesianMesh':

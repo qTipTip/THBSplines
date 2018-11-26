@@ -1,8 +1,9 @@
 from src.hierarchical_space import HierarchicalSpace
+import logging
 
 
 def refine(hspace: HierarchicalSpace, marked_entities, type='cells') -> HierarchicalSpace:
-    print("""
+    logging.info("""
     Refining hierarchical space
     ===========================
     space.nlevels = {}
@@ -13,7 +14,7 @@ def refine(hspace: HierarchicalSpace, marked_entities, type='cells') -> Hierarch
     marked_functions = hspace.functions_to_deactivate_from_cells(marked_cells)
     hspace.refine(marked_functions, new_cells)
 
-    print("""
+    logging.info("""
     After refinement, the space has
     ===============================
     space.nfuncs = {}
