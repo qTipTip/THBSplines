@@ -42,6 +42,7 @@ class BSpline(object):
 
     __repr__ = __str__
 
+
 class UnivariateBSpline(object):
 
     def __init__(self, degree, knots, endpoint=True):
