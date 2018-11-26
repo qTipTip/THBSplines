@@ -252,6 +252,19 @@ class HierarchicalSpace(Space):
             cells = np.union1d(cells, np.flatnonzero(condition))
         return cells
 
+    def refine_in_rectangle(self, rectangle, level):
+        """
+        Returns the set active of indices marked for refinement contained in the given rectangle
+        :param rectangle:
+        :param level:
+        :return:
+        """
+        cells = self.mesh.meshes[level].cells
+        cells_to_mark = np.all((rectangle[:, 0] <= cells[:, :, 0]) & (rectangle[:, 1] >= cells[:, :, 1]),
+                               axis=1)
+        return np.intersect1d(np.flatnonzero(cells_to_mark), self.mesh.aelem_level[level])
+
+
 if __name__ == '__main__':
     knots = [
         [0, 0, 1, 2, 3, 3],

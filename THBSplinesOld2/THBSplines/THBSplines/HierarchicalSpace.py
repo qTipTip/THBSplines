@@ -21,7 +21,6 @@ class HierarchicalSpace(object):
         self.physical_dim = tensor_product_space.physical_dim
         self.mesh = hierarchical_mesh
         self.projectors = {}
-        self.set_overloading()
 
     def add_new_level(self):
         if self.number_of_levels == self.mesh.number_of_levels - 1:
@@ -50,7 +49,6 @@ class HierarchicalSpace(object):
 
         self.refine_hierarchical_space(marked_functions, NE)
         self.update_hierarchical_mesh()
-        self.set_overloading()
 
     def get_children(self, marked_functions, level):
         children = set()
@@ -176,12 +174,13 @@ class HierarchicalSpace(object):
         return C
 
     def visualize_hierarchical_mesh(self):
+
         import matplotlib.pyplot as plt
         import matplotlib.patches as plp
         if self.parametric_dim != 2:
             raise ValueError('Can only visualize 2D-meshes')
 
-        self.set_overloading()
+        self.set_overloading_function()
         fig = plt.figure()
         axs = fig.gca()
         max_active = np.prod([(d + 1) for d in self.tensor_product_space_per_level[0].degrees])
@@ -212,6 +211,7 @@ class HierarchicalSpace(object):
             return sorted(functions, key = lambda f: f.greville_point)
         else:
             return functions
+
     def set_overloading(self):
         """
         Loops through each cell in the hierarchical mesh, and sets the number of active basis functions.
@@ -227,6 +227,25 @@ class HierarchicalSpace(object):
                     number_of_active_b_splines_per_active_element[i] += 1
             i += 1
         self.element_to_overloading = number_of_active_b_splines_per_active_element
+
+
+    def set_overloading_function(self):
+        """
+
+        :return:
+        """
+        number_of_active_b_splines_per_active_element = defaultdict(int)
+        b = self.get_truncated_basis()
+        eps = 1.0E-14
+        for i, elem in enumerate(self.hierarchical_mesh_cells):
+
+            mp = [elem[0][0] + np.diff(elem[0]) / 2, elem[1][0] + np.diff(elem[1]) / 2]
+            print(f"Midpoint of {elem} is {mp}")
+            for func in b:
+                if abs(func(mp)) > eps:
+                    number_of_active_b_splines_per_active_element[i] += 1
+        self.element_to_overloading = number_of_active_b_splines_per_active_element
+
 
     def refine_in_rectangle(self, rectangle, level):
         """
