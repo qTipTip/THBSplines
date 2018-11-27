@@ -1,8 +1,16 @@
-from THBSplines.src.hierarchical_space import HierarchicalSpace
 import logging
+
+from THBSplines.src.hierarchical_space import HierarchicalSpace
 
 
 def refine(hspace: HierarchicalSpace, marked_entities, type='cells') -> HierarchicalSpace:
+    """
+    Refines the hierarchical space based on the type of marked entities.
+    :param hspace:
+    :param marked_entities:
+    :param type:
+    :return:
+    """
     logging.info("""
     Refining hierarchical space
     ===========================

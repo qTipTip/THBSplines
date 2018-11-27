@@ -182,12 +182,13 @@ if __name__ == '__main__':
     cells[1] = [0, 1, 2, 3, 4, 5, 6, 7]
     t = refine(t, cells)
 
-    x = np.linspace(0, 1, 100)
-    y = np.linspace(0, 1, 100)
-    z = np.zeros((100, 100))
+    N = 40
+    x = np.linspace(0, 3, N)
+    y = np.linspace(0, 3, N)
+    z = np.zeros((N, N))
     for b in t.spaces[0].basis:
-        for i in range(100):
-            for j in range(100):
+        for i in range(N):
+            for j in range(N):
                 z[i, j] = b(np.array([x[i], y[j]]))
         import matplotlib.pyplot as plt
         from mpl_toolkits.mplot3d import Axes3D
