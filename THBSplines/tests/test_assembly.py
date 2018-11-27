@@ -1,6 +1,7 @@
 import numpy as np
-import pytest
+import quadpy
 import scipy.integrate
+from tqdm import tqdm
 
 from THBSplines.src.hierarchical_space import HierarchicalSpace
 from THBSplines.src.refinement import refine
@@ -47,6 +48,13 @@ def translate_points(points, cell, weights):
     return points, weights, area_cell
 
 
+def integrate_bivariate(bi, bj, gp, gw, a):
+    i_vals = bi(gp)
+    j_vals = bj(gp)
+    vals = gw * i_vals * j_vals
+    return sum(vals)
+
+
 def local_mass_matrix(T, level):
     active_cells = T.mesh.meshes[level].cells[T.mesh.aelem_level[level]]
 
@@ -54,14 +62,29 @@ def local_mass_matrix(T, level):
     ndofs_v = T.spaces[level].nfuncs
 
     M = np.zeros((ndofs_u, ndofs_v))
+    points, weights = np.polynomial.legendre.leggauss(T.spaces[level].degrees[0] + 1)
 
-    for cell in active_cells:
+    for cell in tqdm(active_cells):
+        dim = cell.shape[0]
+        gp, gw, a = translate_points(points, cell, weights)
         for i in range(ndofs_u):
             bi = T.spaces[level].basis[i]
             for j in range(ndofs_v):
+                print(cell)
                 bj = T.spaces[level].basis[j]
-                I = integrate_smart(bi, bj, cell)
-                M[i, j] += I
+                quad = quadpy.quadrilateral.rectangle_points(cell[:, 0], cell[:, 1])
+
+                def integrand(x):
+                    y = bi(x.T)
+                    z = bj(x.T)
+                    return y.T * z.T
+
+                val = quadpy.quadrilateral.integrate(
+                    integrand,
+                    quad,
+                    quadpy.quadrilateral.Stroud('C2 7-2')
+                )
+                M[i, j] += val
 
     return M
 
@@ -118,7 +141,6 @@ def test_linear_mass_matrix():
     np.testing.assert_allclose(M, expected_M)
 
 
-@pytest.mark.slow
 def test_bilinear_mass_matrix():
     knots = [
         [0, 0, 1 / 3, 2 / 3, 1, 1],
@@ -204,3 +226,33 @@ def test_local_mass_matrix_univariate_refined():
     m1 = local_mass_matrix(T, 1)
     assert m0.shape == (4, 4)
     assert m1.shape == (7, 7)
+
+
+if __name__ == '__main__':
+    knots = [
+        [0, 0, 0, 1, 2, 3, 3, 3],
+        [0, 0, 0, 1, 2, 3, 3, 3]
+    ]
+    deg = [2, 2]
+    dim = 2
+
+    t = HierarchicalSpace(knots, deg, dim)
+    cells = {0: [4]}
+    t = refine(t, cells)
+
+    x = np.linspace(0, 1, 100)
+    y = np.linspace(0, 1, 100)
+    z = np.zeros((100, 100))
+    for b in t.spaces[0].basis:
+        for i in range(100):
+            for j in range(100):
+                z[i, j] = b((x[i], y[j]))
+        import matplotlib.pyplot as plt
+        from mpl_toolkits.mplot3d import Axes3D
+
+        fig = plt.figure()
+        axs = Axes3D(fig)
+
+        X, Y = np.meshgrid(x, y)
+        axs.plot_surface(X, Y, z)
+        plt.show()

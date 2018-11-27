@@ -1,6 +1,7 @@
 import numpy as np
 cimport numpy as np
 cimport cython
+import numpy as np
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -140,13 +141,15 @@ cdef class TensorProductBSpline:
         for i in range(n):
             self.univariate_b_splines.append(BSpline(degrees[i], knots[i]))
 
-    def __call__(TensorProductBSpline self, double[:, :] x):
+    def __call__(TensorProductBSpline self, x):
+
         x = np.array(x, dtype=np.float64).reshape(-1, self.parametric_dimension)
-        return self.evaluate(x)
+        result = self.evaluate(x)
+        return result
 
     cpdef evaluate(self, double [:, :] x):
         cdef int n = x.shape[0]
-        cdef double[:] out_vector = np.ones(n, dtype=np.float64)
+        cdef np.ndarray[np.float64_t, ndim=1] out_vector = np.ones(n, dtype=np.float64)
         cdef Py_ssize_t i, j
         cdef np.ndarray[np.float64_t, ndim=2] temp_vector = np.zeros_like(x, dtype=np.float64)
         for j in range(self.parametric_dimension):
@@ -155,3 +158,15 @@ cdef class TensorProductBSpline:
             for j in range(self.parametric_dimension):
                 out_vector[i] *= temp_vector[i, j]
         return out_vector
+
+    def evaluate_gridded_data(self, x):
+        n = x.shape[0]
+        dim = x.shape[1]
+        shape = tuple([n for _ in range(dim)])
+        print(shape)
+        z = np.zeros(shape = shape, dtype=np.float64)
+        print(z.shape)
+        for i, _ in np.ndenumerate(x):
+            point = np.array([x[i[d], d] for d in range(dim)], dtype=np.float64)
+            z[i] = self(point)
+        return z

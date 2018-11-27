@@ -5,13 +5,13 @@ import numpy as np
 from THBSplines.src.abstract_space import Space
 from THBSplines.src.b_spline import BSpline, augment_knots, find_knot_index
 from THBSplines.src.cartesian_mesh import CartesianMesh
-
+from THBSplines.lib.BSpline import TensorProductBSpline
 
 class TensorProductSpace(Space):
 
     def __init__(self, knots, degrees, dim):
-        self.knots = np.array(knots)
-        self.degrees = np.array(degrees)
+        self.knots = np.array(knots, dtype=np.float64)
+        self.degrees = np.array(degrees, dtype=np.intc)
         self.dim = dim
         self.mesh = CartesianMesh(knots, dim)
         self.basis_supports = None  # a list of supports
@@ -62,8 +62,9 @@ class TensorProductSpace(Space):
             new_knots = []
             for j in range(dim):
                 new_knots.append(self.knots[j][idx_start_perm[i, j]: idx_stop_perm[i, j]])
-            new_b_spline = BSpline(degrees, new_knots)
-            new_b_spline.tensor_product_indices = idx_start_perm[i]
+            new_knots = np.array(new_knots, dtype=np.float64)
+            new_b_spline = TensorProductBSpline(degrees, new_knots)
+            # new_b_spline.tensor_product_indices = idx_start_perm[i]
             b_splines.append(new_b_spline)
             b_support[i] = [[new_knots[j][0], new_knots[j][-1]] for j in range(dim)]
         self.basis = np.array(b_splines)
