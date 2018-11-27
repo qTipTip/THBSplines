@@ -147,6 +147,8 @@ cdef class TensorProductBSpline:
         result = self.evaluate(x)
         return result
 
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
     cpdef evaluate(self, double [:, :] x):
         cdef int n = x.shape[0]
         cdef np.ndarray[np.float64_t, ndim=1] out_vector = np.ones(n, dtype=np.float64)
@@ -170,3 +172,19 @@ cdef class TensorProductBSpline:
             point = np.array([x[i[d], d] for d in range(dim)], dtype=np.float64)
             z[i] = self(point)
         return z
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.cdivision(True)
+cpdef double integrate(double[:] bi_values, double[:] bj_values, double[:] weights, double area, int dim):
+
+    cdef double I = 0
+    cdef Py_ssize_t i
+    cdef int n = bi_values.shape[0]
+    for i in range(n):
+        I += weights[i] * bi_values[i] * bj_values[i]
+
+    I *= area / 2**dim
+
+    return I

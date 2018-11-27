@@ -93,8 +93,8 @@ def test_subdivision_matrix_linear():
     T = refine(T, cells)
     C = T.create_subdivision_matrix('full')
 
-    np.testing.assert_allclose(C[0], np.eye(4))
-    np.testing.assert_allclose(C[1], np.array([
+    np.testing.assert_allclose(C[0].toarray(), np.eye(4))
+    np.testing.assert_allclose(C[1].toarray(), np.array([
         [1, 0, 0, 0, 0],
         [0.5, 0.5, 0, 0, 0],
         [0, 1, 0, 0, 0],
@@ -114,7 +114,6 @@ def test_change_of_basis_matrix_linear():
     cells = {0: [1]}
     T = refine(T, cells)
     C = T.get_basis_conversion_matrix(0)
-
     np.testing.assert_allclose(C, np.array([
         [1, 0, 0, 0],
         [0.5, 0.5, 0, 0],

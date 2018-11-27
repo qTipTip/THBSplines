@@ -194,7 +194,7 @@ class HierarchicalSpace(Space):
         mesh = self.mesh
 
         C = {}
-        C[0] = np.identity(self.spaces[0].nfuncs)
+        C[0] = sp.identity(self.spaces[0].nfuncs, format='lil')
         C[0] = C[0][:, self.afunc_level[0]]
 
         if mode == 'reduced':
@@ -218,9 +218,9 @@ class HierarchicalSpace(Space):
             return C
         else:
             for level in range(1, self.nlevels):
-                I = np.identity(self.spaces[level].nfuncs)
+                I = sp.identity(self.spaces[level].nfuncs, format='lil')
                 aux = self.get_basis_conversion_matrix(level - 1)
-                C[level] = np.hstack([aux @ C[level - 1], I[:, self.afunc_level[level]]])
+                C[level] = sp.hstack([aux @ C[level - 1], I[:, self.afunc_level[level]]])
             return C
 
     def _get_truncated_supports(self):

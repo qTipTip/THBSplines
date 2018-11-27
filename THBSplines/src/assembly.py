@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.integrate
 from tqdm import tqdm
-
+from THBSplines.lib.BSpline import integrate as cintegrate
 
 def hierarchical_mass_matrix(T):
     mesh = T.mesh
@@ -68,7 +68,7 @@ def local_mass_matrix(T, level):
             for j in active_basis_functions:
                 bj = T.spaces[level].basis[j]
                 bi_values, bj_values = bi(qp), bj(qp)
-                val = integrate(bi_values, bj_values, qw, area, dim)
+                val = cintegrate(bi_values, bj_values, qw, area, dim)
                 M[i, j] += val
 
     return M
