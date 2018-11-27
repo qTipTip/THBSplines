@@ -66,7 +66,7 @@ def test_linear_mass_matrix():
          [0., 0., 0.05555556, 0.11111111, 0.],
          [0., 0.02777778, 0.02777778, 0., 0.11111111]]
     )
-    np.testing.assert_allclose(M, expected_M)
+    np.testing.assert_allclose(M.toarray(), expected_M)
 
 
 def test_bilinear_mass_matrix():
@@ -123,7 +123,7 @@ def test_bilinear_mass_matrix():
          [.000000, 0.002315, 0.002315, 0.000000, 0.000000, 0.003858, 0.003858, 0.000000, 0.000000, 0.000000, 0.000000,
           0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.003086, 0.012346
           ], ])
-    np.testing.assert_allclose(m, expected_m, atol=1.0e-5)
+    np.testing.assert_allclose(m.toarray(), expected_m, atol=1.0e-5)
 
 
 def test_invariant():

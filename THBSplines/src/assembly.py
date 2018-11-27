@@ -9,7 +9,7 @@ def hierarchical_mass_matrix(T):
     mesh = T.mesh
 
     n = T.nfuncs
-    M = np.zeros((n, n))
+    M = sp.lil_matrix((n, n), dtype=np.float64)
 
     ndofs_u = 0
     ndofs_v = 0
