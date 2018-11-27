@@ -5,7 +5,7 @@ from THBSplines.lib.BSpline import TensorProductBSpline
 from THBSplines.src.abstract_space import Space
 from THBSplines.src.b_spline import augment_knots, find_knot_index
 from THBSplines.src.cartesian_mesh import CartesianMesh
-
+import scipy.sparse as sp
 
 class TensorProductSpace(Space):
 
@@ -95,6 +95,7 @@ class TensorProductSpace(Space):
             n = len(coarse) - (degree + 1)
 
             a = np.zeros(shape=(m, n))
+            a = sp.lil_matrix((m, n), dtype=np.float64)
             fine = np.array(fine, dtype=np.float64)
             coarse = np.array(coarse, dtype=np.float64)
             for i in range(m):
@@ -109,7 +110,7 @@ class TensorProductSpace(Space):
             matrices.append(a[degree + 1:-degree - 1, degree + 1:-degree - 1])
         a = matrices[0]
         for matrix in matrices[1:]:
-            a = np.kron(a, matrix)
+            a = sp.kron(a, matrix, format='lil')
         return a
 
     def get_basis_functions(self, cell_list: np.ndarray) -> np.ndarray:
