@@ -67,22 +67,24 @@ def local_mass_matrix(T, level):
             for j in active_basis_functions:
                 bj = T.spaces[level].basis[j]
 
-                val = integrate_bivariate_quadrature(bi, bj, qp, qw, area)
+                val = integrate(bi, bj, qp, qw, area)
                 M[i, j] += val
 
     return M
 
 
-def integrate_bivariate_quadrature(bi, bj, points, weights, area):
+def integrate(bi, bj, points, weights, area):
     values_i = bi(points)
     values_j = bj(points)
     I = 0
     for i in range(len(points)):
         I += weights[i] * values_i[i] * values_j[i]
 
-    I *= area / 4
+    dim = points.shape[1]
+    I *= area / 2**dim
 
     return I
+
 def integrate_smart(bi, bj, cell):
     dim = cell.shape[0]
 
