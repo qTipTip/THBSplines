@@ -142,7 +142,7 @@ def test_local_mass_matrix_univariate():
     M = local_mass_matrix(T, 0)
 
     assert M.shape == (1, 1)
-    np.testing.assert_allclose(M, 2 / 3)
+    np.testing.assert_allclose(M.toarray(), 2 / 3)
 
 
 def test_local_mass_matrix_univariate_refined():

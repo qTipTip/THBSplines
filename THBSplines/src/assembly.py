@@ -1,7 +1,9 @@
 import numpy as np
+import scipy.sparse as sp
 import scipy.integrate
-from tqdm import tqdm
 from THBSplines.lib.BSpline import integrate as cintegrate
+from tqdm import tqdm
+
 
 def hierarchical_mass_matrix(T):
     mesh = T.mesh
@@ -50,13 +52,14 @@ def translate_points(points, cell, weights):
 
     return points, weights, area_cell
 
+
 def local_mass_matrix(T, level):
     active_cells = T.mesh.meshes[level].cells[T.mesh.aelem_level[level]]
 
     ndofs_u = T.spaces[level].nfuncs
     ndofs_v = T.spaces[level].nfuncs
 
-    M = np.zeros((ndofs_u, ndofs_v))
+    M = sp.lil_matrix((ndofs_u, ndofs_v), dtype=np.float64)
 
     points, weights = np.polynomial.legendre.leggauss(T.spaces[level].degrees[0] + 1)
     for cell in tqdm(active_cells):
@@ -75,14 +78,14 @@ def local_mass_matrix(T, level):
 
 
 def integrate(bi_values, bj_values, weights, area, dim):
-
     I = 0
     for i in range(len(bi_values)):
         I += weights[i] * bi_values[i] * bj_values[i]
 
-    I *= area / 2**dim
+    I *= area / 2 ** dim
 
     return I
+
 
 def integrate_smart(bi, bj, cell):
     dim = cell.shape[0]
@@ -90,5 +93,6 @@ def integrate_smart(bi, bj, cell):
     if dim == 1:
         return scipy.integrate.quad(lambda x: bi(x) * bj(x), cell[0, 0], cell[0, 1])[0]
     elif dim == 2:
-        val, info = scipy.integrate.dblquad(lambda y, x: bi(np.array([x, y])) * bj(np.array([x, y])), cell[0, 0], cell[0, 1],
-                                   lambda x: cell[1, 0], lambda x: cell[1, 1])
+        val, info = scipy.integrate.dblquad(lambda y, x: bi(np.array([x, y])) * bj(np.array([x, y])), cell[0, 0],
+                                            cell[0, 1],
+                                            lambda x: cell[1, 0], lambda x: cell[1, 1])
