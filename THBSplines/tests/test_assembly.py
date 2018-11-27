@@ -1,10 +1,7 @@
 import numpy as np
-import scipy.integrate
-from src.assembly import hierarchical_mass_matrix, local_mass_matrix
-from tqdm import tqdm
-
 from THBSplines.src.hierarchical_space import HierarchicalSpace
 from THBSplines.src.refinement import refine
+from src.assembly import hierarchical_mass_matrix, local_mass_matrix
 
 
 def integrate(bi, bj, points, weights):
@@ -13,9 +10,6 @@ def integrate(bi, bj, points, weights):
         I += weights[i] * bi(points[i]) * bj(points[i])
 
     return I
-
-
-
 
 
 def translate_points(points, cell, weights):
@@ -46,11 +40,6 @@ def integrate_bivariate(bi, bj, gp, gw, a):
     j_vals = bj(gp)
     vals = gw * i_vals * j_vals
     return sum(vals)
-
-
-
-
-
 
 
 def test_linear_mass_matrix():
