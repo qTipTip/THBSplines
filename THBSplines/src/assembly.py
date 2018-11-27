@@ -61,26 +61,25 @@ def local_mass_matrix(T, level):
     points, weights = np.polynomial.legendre.leggauss(T.spaces[level].degrees[0] + 1)
     for cell in tqdm(active_cells):
         qp, qw, area = translate_points(points, cell, weights)
+        dim = qp.shape[1]
         active_basis_functions = T.spaces[level].get_functions_on_rectangle(cell)
         for i in active_basis_functions:
             bi = T.spaces[level].basis[i]
             for j in active_basis_functions:
                 bj = T.spaces[level].basis[j]
-
-                val = integrate(bi, bj, qp, qw, area)
+                bi_values, bj_values = bi(qp), bj(qp)
+                val = integrate(bi_values, bj_values, qw, area, dim)
                 M[i, j] += val
 
     return M
 
 
-def integrate(bi, bj, points, weights, area):
-    values_i = bi(points)
-    values_j = bj(points)
-    I = 0
-    for i in range(len(points)):
-        I += weights[i] * values_i[i] * values_j[i]
+def integrate(bi_values, bj_values, weights, area, dim):
 
-    dim = points.shape[1]
+    I = 0
+    for i in range(len(bi_values)):
+        I += weights[i] * bi_values[i] * bj_values[i]
+
     I *= area / 2**dim
 
     return I

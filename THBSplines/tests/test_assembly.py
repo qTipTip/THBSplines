@@ -126,6 +126,11 @@ def test_bilinear_mass_matrix():
     np.testing.assert_allclose(m, expected_m, atol=1.0e-5)
 
 
+def test_invariant():
+    # TODO: Write test.
+
+    pass
+
 def test_local_mass_matrix_univariate():
     knots = [
         [0, 1, 2]
