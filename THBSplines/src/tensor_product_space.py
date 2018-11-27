@@ -1,11 +1,11 @@
 from typing import Union, List, Tuple
 
 import numpy as np
-
-from THBSplines.src.abstract_space import Space
-from THBSplines.src.b_spline import BSpline, augment_knots, find_knot_index
-from THBSplines.src.cartesian_mesh import CartesianMesh
 from THBSplines.lib.BSpline import TensorProductBSpline
+from THBSplines.src.abstract_space import Space
+from THBSplines.src.b_spline import augment_knots, find_knot_index
+from THBSplines.src.cartesian_mesh import CartesianMesh
+
 
 class TensorProductSpace(Space):
 
@@ -152,9 +152,21 @@ class TensorProductSpace(Space):
         assert len(coefficients) == len(self.basis)
 
         def f(x):
-            return sum([c*b(x) for c, b in zip(coefficients, self.basis)])
+            return sum([c * b(x) for c, b in zip(coefficients, self.basis)])
 
         return f
+
+    def get_functions_on_rectangle(self, rectangle):
+        """
+        Returns the indices of the supports whose support contains the rectangle.
+        :param rectangle:
+        :return:
+        """
+        condition = (self.basis_supports[:, :, 0] <= rectangle[:, 0]) & (
+                    self.basis_supports[:, :, 1] >= rectangle[:, 1])
+        i = np.flatnonzero(np.all(condition, axis=1))
+        return i
+
 
 def insert_midpoints(knots, p):
     """
@@ -170,6 +182,7 @@ def insert_midpoints(knots, p):
     midpoints = (unique_knots[:-1] + unique_knots[1:]) / 2
 
     return np.sort(np.concatenate((knots, midpoints)))
+
 
 if __name__ == '__main__':
     knots = [

@@ -52,3 +52,27 @@ def test_tensor_product_b_splines():
     x = np.random.uniform(0, 4, size=(10, 2))
 
     assert B(x).shape == (10,)
+
+
+def test_tensor_product_b_splines_quadratic():
+    knots = np.array([[0, 1, 2, 3], [0, 1, 2, 3]], dtype=np.float64)
+    d = 2
+    degrees = np.array([2, 2], dtype=np.intc)
+
+    @np.vectorize
+    def exact(x):
+        if 0 <= x < 1:
+            return x * x / 2
+        elif 1 <= x < 2:
+            return x / 2 * (2 - x) + (3 - x) / 2 * (x - 1)
+        else:
+            return (3 - x) * (3 - x) / 2
+
+    def eexact(x):
+        return exact(x[:, 0]) * exact(x[:, 1])
+
+    B = TensorProductBSpline(degrees, knots)
+    x = np.random.uniform(0, 3, size=(10, 2))
+    y_expected = eexact(x)
+    y_computed = B(x)
+    np.testing.assert_allclose(y_computed, y_expected)

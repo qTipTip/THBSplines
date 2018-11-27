@@ -1,6 +1,6 @@
 import numpy as np
-import quadpy
 import scipy.integrate
+from src.assembly import hierarchical_mass_matrix, local_mass_matrix
 from tqdm import tqdm
 
 from THBSplines.src.hierarchical_space import HierarchicalSpace
@@ -15,14 +15,7 @@ def integrate(bi, bj, points, weights):
     return I
 
 
-def integrate_smart(bi, bj, cell):
-    dim = cell.shape[0]
 
-    if dim == 1:
-        return scipy.integrate.quad(lambda x: bi(x) * bj(x), cell[0, 0], cell[0, 1])[0]
-    elif dim == 2:
-        return scipy.integrate.dblquad(lambda y, x: bi(np.array([x, y])) * bj(np.array([x, y])), cell[0, 0], cell[0, 1],
-                                       lambda x: cell[1, 0], lambda x: cell[1, 1])[0]
 
 
 def translate_points(points, cell, weights):
@@ -55,63 +48,9 @@ def integrate_bivariate(bi, bj, gp, gw, a):
     return sum(vals)
 
 
-def local_mass_matrix(T, level):
-    active_cells = T.mesh.meshes[level].cells[T.mesh.aelem_level[level]]
-
-    ndofs_u = T.spaces[level].nfuncs
-    ndofs_v = T.spaces[level].nfuncs
-
-    M = np.zeros((ndofs_u, ndofs_v))
-    points, weights = np.polynomial.legendre.leggauss(T.spaces[level].degrees[0] + 1)
-
-    for cell in tqdm(active_cells):
-        dim = cell.shape[0]
-        gp, gw, a = translate_points(points, cell, weights)
-        for i in range(ndofs_u):
-            bi = T.spaces[level].basis[i]
-            for j in range(ndofs_v):
-                print(cell)
-                bj = T.spaces[level].basis[j]
-                quad = quadpy.quadrilateral.rectangle_points(cell[:, 0], cell[:, 1])
-
-                def integrand(x):
-                    y = bi(x.T)
-                    z = bj(x.T)
-                    return y.T * z.T
-
-                val = quadpy.quadrilateral.integrate(
-                    integrand,
-                    quad,
-                    quadpy.quadrilateral.Stroud('C2 7-2')
-                )
-                M[i, j] += val
-
-    return M
 
 
-def hierarchical_mass_matrix(T):
-    mesh = T.mesh
 
-    n = T.nfuncs
-    M = np.zeros((n, n))
-
-    ndofs_u = 0
-    ndofs_v = 0
-    C = T.create_subdivision_matrix('full')
-    for level in range(mesh.nlevels):
-        ndofs_u += T.nfuncs_level[level]
-        ndofs_v += T.nfuncs_level[level]
-
-        if mesh.nel_per_level[level] > 0:
-            M_local = local_mass_matrix(T, level)
-
-            dofs_u = range(ndofs_u)
-            dofs_v = range(ndofs_v)
-
-            ix = np.ix_(dofs_u, dofs_v)
-            M[ix] += C[level].T @ M_local @ C[level]
-
-    return M
 
 
 def test_linear_mass_matrix():
@@ -240,13 +179,16 @@ if __name__ == '__main__':
     cells = {0: [4]}
     t = refine(t, cells)
 
+    cells[1] = [0, 1, 2, 3, 4, 5, 6, 7]
+    t = refine(t, cells)
+
     x = np.linspace(0, 1, 100)
     y = np.linspace(0, 1, 100)
     z = np.zeros((100, 100))
     for b in t.spaces[0].basis:
         for i in range(100):
             for j in range(100):
-                z[i, j] = b((x[i], y[j]))
+                z[i, j] = b(np.array([x[i], y[j]]))
         import matplotlib.pyplot as plt
         from mpl_toolkits.mplot3d import Axes3D
 
