@@ -1,6 +1,6 @@
 import numpy as np
-import scipy.sparse as sp
 import scipy.integrate
+import scipy.sparse as sp
 from THBSplines.lib.BSpline import integrate as cintegrate
 from tqdm import tqdm
 
@@ -62,7 +62,7 @@ def local_mass_matrix(T, level):
     M = sp.lil_matrix((ndofs_u, ndofs_v), dtype=np.float64)
 
     points, weights = np.polynomial.legendre.leggauss(T.spaces[level].degrees[0] + 1)
-    for cell in tqdm(active_cells):
+    for cell in tqdm(active_cells, desc=f"level = {level}"):
         qp, qw, area = translate_points(points, cell, weights)
         dim = qp.shape[1]
         active_basis_functions = T.spaces[level].get_functions_on_rectangle(cell)
