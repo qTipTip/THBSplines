@@ -1,11 +1,12 @@
 from typing import Union, List, Tuple
 
 import numpy as np
+import scipy.sparse as sp
 from THBSplines.lib.BSpline import TensorProductBSpline
 from THBSplines.src.abstract_space import Space
 from THBSplines.src.b_spline import augment_knots, find_knot_index
 from THBSplines.src.cartesian_mesh import CartesianMesh
-import scipy.sparse as sp
+
 
 class TensorProductSpace(Space):
 
@@ -61,11 +62,13 @@ class TensorProductSpace(Space):
         b_support = np.zeros((n, self.dim, 2))
         for i in range(n):
             new_knots = []
+            end_evals = []
             for j in range(dim):
                 new_knots.append(self.knots[j][idx_start_perm[i, j]: idx_stop_perm[i, j]])
+                end_evals.append(idx_stop_perm[i, j] == (len(self.knots[j])))
             new_knots = np.array(new_knots, dtype=np.float64)
-            new_b_spline = TensorProductBSpline(degrees, new_knots)
-            # new_b_spline.tensor_product_indices = idx_start_perm[i]
+            end_evals = np.array(end_evals, dtype=np.intc).ravel()
+            new_b_spline = TensorProductBSpline(degrees, new_knots, end_evals)
             b_splines.append(new_b_spline)
             b_support[i] = [[new_knots[j][0], new_knots[j][-1]] for j in range(dim)]
         self.basis = np.array(b_splines)
@@ -166,7 +169,7 @@ class TensorProductSpace(Space):
         :return:
         """
         condition = (self.basis_supports[:, :, 0] <= rectangle[:, 0]) & (
-                    self.basis_supports[:, :, 1] >= rectangle[:, 1])
+                self.basis_supports[:, :, 1] >= rectangle[:, 1])
         i = np.flatnonzero(np.all(condition, axis=1))
         return i
 
@@ -189,14 +192,28 @@ def insert_midpoints(knots, p):
 
 if __name__ == '__main__':
     knots = [
-        [0, 1, 2, 3, 4, 5, 5],
-        [0, 0, 1, 2, 3, 4, 5, 5]
+        [0, 0, 0, 1, 2, 3, 4, 5, 5, 5],
+        [0, 0, 0, 1, 2, 3, 4, 5, 5, 5]
     ]
-    d = [1, 1]
+    d = [2, 2]
     dim = 2
 
     T = TensorProductSpace(knots, d, dim)
 
-    c = [0, 1, 2]
-    print(T.cell_to_basis(c))
-    print(T.basis_to_cell(c))
+    N = 30
+    x = np.linspace(0, 5, N)
+    y = np.linspace(0, 5, N)
+    X, Y = np.meshgrid(x, y)
+    for b in T.basis:
+        z = np.zeros((N, N))
+        for i in range(N):
+            for j in range(N):
+                z[i, j] = b(np.array([x[i], y[j]]))
+
+        import matplotlib.pyplot as plt
+        from mpl_toolkits.mplot3d import Axes3D
+
+        fig = plt.figure()
+        axs = Axes3D(fig)
+        axs.plot_surface(X, Y, z)
+        plt.show()

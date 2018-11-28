@@ -51,16 +51,18 @@ def create_subdivision_matrix(hspace: HierarchicalSpace, mode='reduced') -> dict
 if __name__ == '__main__':
     knots = [
         [0, 0, 1, 2, 3, 3],
+        [0, 0, 1, 2, 3, 3],
     ]
-    d = 1
-    degrees = [1]
+    d = 2
+    degrees = [1, 1]
     T = HierarchicalSpace(knots, degrees, d)
     marked_cells = {0: [0]}
     T = refine(T, marked_cells)
     C = create_subdivision_matrix(T, mode='full')
     N = 30
     x = np.linspace(0, 3, N)
-    z = np.zeros(N)
+    y = np.linspace(0, 3, N)
+    z = np.zeros((N, N))
 
     B = T.spaces[-1].basis
 

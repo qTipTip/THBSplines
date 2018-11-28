@@ -104,6 +104,7 @@ def test_subdivision_matrix_linear():
         [0, 0, 0, 1, 0]
     ]))
 
+
 def test_change_of_basis_matrix_linear():
     knots = [
         [0, 0, 1 / 3, 2 / 3, 1, 1]
@@ -123,6 +124,7 @@ def test_change_of_basis_matrix_linear():
         [0, 0, 0.5, 0.5],
         [0, 0, 0, 1]
     ]))
+
 
 def test_full_mesh_refine():
     knots = np.array([
@@ -146,8 +148,6 @@ def test_full_mesh_refine():
         0: 0,
         1: 9,
     })
-
-
 
     cells[1] = T.refine_in_rectangle(rectangle, 1)
     T = refine(T, cells)

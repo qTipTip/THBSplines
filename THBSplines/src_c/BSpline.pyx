@@ -27,7 +27,7 @@ cdef bint allclose(double[:] x, double[:] y):
 
 @cython.wraparound(False)
 @cython.boundscheck(False)
-cdef int knot_index(double [:] knots, double x):
+cdef int knot_index(double [:] knots, double x, int end):
     """
     Returns the index such that inserting x at this index yields a sorted array.
     :param knots: 
@@ -37,18 +37,25 @@ cdef int knot_index(double [:] knots, double x):
 
     cdef unsigned int n
     cdef Py_ssize_t i
-
     n = knots.shape[0]
-    for i in range(n-1):
-        if knots[i] <= x < knots[i+1]:
-            return i
-    return -1
+
+    if end == 0:
+        for i in range(n-1):
+            if knots[i] <= x < knots[i+1]:
+                return i
+        return -1
+    else:
+        for i in range(n-1):
+            if knots[i] < x <= knots[i+1]:
+                return i
+        return -1
+
 
 
 @cython.wraparound(False)
 @cython.boundscheck(False)
 @cython.cdivision(True)
-cdef double evaluate_single_basis_function(double x, int degree, double[:] knots):
+cdef double evaluate_single_basis_function(double x, int degree, double[:] knots, int end):
     """
     Evaluates the single basis function defined over the local knot vector, using the recursion formula. 
     :param x: point of evaluation
@@ -57,7 +64,7 @@ cdef double evaluate_single_basis_function(double x, int degree, double[:] knots
     :return: basis function evaluated at point
     """
 
-    cdef int i = knot_index(knots, x)
+    cdef int i = knot_index(knots, x, end)
     cdef int n = knots.shape[0]
     if i == -1:
         return 0.0
@@ -67,8 +74,8 @@ cdef double evaluate_single_basis_function(double x, int degree, double[:] knots
 
 
     cdef double left, right
-    left = evaluate_single_basis_function(x, degree - 1, knots[:n-1])
-    right = evaluate_single_basis_function(x, degree - 1, knots[1:n])
+    left = evaluate_single_basis_function(x, degree - 1, knots[:n-1], end)
+    right = evaluate_single_basis_function(x, degree - 1, knots[1:n], end)
 
     cdef double denom_left = knots[n-2] - knots[0]
     cdef double denom_right = knots[n-1] - knots[1]
@@ -87,14 +94,14 @@ cdef double evaluate_single_basis_function(double x, int degree, double[:] knots
 
 @cython.wraparound(False)
 @cython.boundscheck(False)
-cpdef np.ndarray[np.float64_t, ndim=1] evaluate_single_basis_function_vectorized(double [:] x, int degree, double[:] knots):
+cpdef np.ndarray[np.float64_t, ndim=1] evaluate_single_basis_function_vectorized(double [:] x, int degree, double[:] knots, int end):
     cdef int n = x.shape[0]
     cdef np.ndarray[np.float64_t, ndim=1] result = np.zeros(n, dtype=np.float64)
     cdef double[:] out_vector = result
 
     cdef Py_ssize_t i
     for i in range(n):
-        out_vector[i] = evaluate_single_basis_function(x[i], degree, knots)
+        out_vector[i] = evaluate_single_basis_function(x[i], degree, knots, end)
     return result
 
 cdef class BSpline:
@@ -102,16 +109,18 @@ cdef class BSpline:
     cdef public:
         int degree
         double[:] knots
+        bint evaluate_end
 
-    def __init__(self, degree, knots):
+    def __init__(self, degree, knots, evaluate_end=0):
         self.degree = degree
         self.knots = knots
+        self.evaluate_end = evaluate_end
 
     def __call__(self, x):
         return self.evaluate(np.array(x, dtype=np.float64))
 
     cdef evaluate(BSpline self, double[:] x):
-        return evaluate_single_basis_function_vectorized(x, self.degree, self.knots)
+        return evaluate_single_basis_function_vectorized(x, self.degree, self.knots, self.evaluate_end)
 
 
     @cython.boundscheck(False)
@@ -130,16 +139,21 @@ cdef class TensorProductBSpline:
     cdef public:
         int[:] degrees
         int parametric_dimension
+        int[:] end_evaluation
         list univariate_b_splines
 
-    def __init__(self, degrees, knots):
+    def __init__(self, degrees, knots, end_evaluation=None):
         self.degrees = degrees
         self.parametric_dimension = len(degrees)
         self.univariate_b_splines = []
+        if end_evaluation is None:
+            end_evaluation = np.zeros(self.parametric_dimension, dtype=np.intc)
+        self.end_evaluation = end_evaluation
+
         cdef int n = knots.shape[0]
         cdef Py_ssize_t i
         for i in range(n):
-            self.univariate_b_splines.append(BSpline(degrees[i], knots[i]))
+            self.univariate_b_splines.append(BSpline(degrees[i], knots[i], self.end_evaluation[i]))
 
     def __call__(TensorProductBSpline self, x):
 
