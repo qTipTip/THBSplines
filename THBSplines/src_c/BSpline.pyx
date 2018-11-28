@@ -1,4 +1,4 @@
-import numpy as np
+
 cimport numpy as np
 cimport cython
 import numpy as np
@@ -104,6 +104,54 @@ cpdef np.ndarray[np.float64_t, ndim=1] evaluate_single_basis_function_vectorized
         out_vector[i] = evaluate_single_basis_function(x[i], degree, knots, end)
     return result
 
+cdef evaluate_single_basis_derivative(x, degree, knots, end, r):
+
+    cdef int i = knot_index(knots, x, end)
+    cdef int n = knots.shape[0]
+    cdef double denom_left = knots[n-2] - knots[0]
+    cdef double denom_right = knots[n-1] - knots[1]
+    cdef double eps = 1.0e-14
+
+    cdef double left, right
+    if r > 0:
+        left = evaluate_single_basis_derivative(x, degree - 1, knots[:n-1], end, r-1)
+        right = evaluate_single_basis_derivative(x, degree - 1, knots[1:n], end, r-1)
+
+        if denom_left < eps:
+            left = 0
+        else:
+            left *= denom_left
+        if denom_right < eps:
+            right = 0
+        else:
+            right = denom_right
+        return degree * (left - right)
+
+    else:
+        left = evaluate_single_basis_function(x, degree - 1, knots[:n-1], end)
+        right = evaluate_single_basis_function(x, degree - 1, knots[1:n], end)
+
+    if denom_left < eps:
+        left = 0
+    else:
+        left *= denom_left
+    if denom_right < eps:
+        right = 0
+    else:
+        right = denom_right
+    return degree * (left - right)
+
+
+cdef evaluate_single_basis_derivative_vectorized(x, degree, knots, evaluate_end, r):
+    cdef int n = x.shape[0]
+    cdef np.ndarray[np.float64_t, ndim=1] result = np.zeros(n, dtype=np.float64)
+    cdef double[:] out_vector = result
+
+    cdef Py_ssize_t i
+    for i in range(n):
+        out_vector[i] = evaluate_single_basis_derivative(x[i], degree, knots, evaluate_end, r)
+    return result
+
 cdef class BSpline:
 
     cdef public:
@@ -122,6 +170,8 @@ cdef class BSpline:
     cdef evaluate(BSpline self, double[:] x):
         return evaluate_single_basis_function_vectorized(x, self.degree, self.knots, self.evaluate_end)
 
+    cpdef derivative(BSpline self, double[:] x, r):
+        return evaluate_single_basis_derivative_vectorized(x, self.degree, self.knots, self.evaluate_end, r)
 
     @cython.boundscheck(False)
     @cython.wraparound(False)

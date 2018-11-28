@@ -29,6 +29,29 @@ def test_b_spline_evaluation_linear_vectorized():
 
     np.testing.assert_allclose(y_computed, y_expected)
 
+def test_b_spline_evaluation_derivatives_vectorized():
+    knots = np.array([0, 1, 2, 3], dtype=np.float64)
+
+    d = 2
+    B = BSpline(d, knots)
+    Bl = BSpline(d-1, knots[:-1])
+    Br = BSpline(d-1, knots[1:])
+
+    @np.vectorize
+    def exact(x):
+        if 0 <= x < 1:
+            return x
+        elif 1 <= x < 2:
+            return 1 - 2 * x
+        else:
+            return -3 + x
+
+    x = np.linspace(0, 3, 20)
+    y_computed = B.derivative(x, 1)
+    y_expected = Bl(x) - Br(x)
+
+    np.testing.assert_allclose(y_computed, y_expected)
+
 
 def test_b_spline_equality():
     B1 = BSpline(2, np.array([0, 1, 2, 3], dtype=np.float64))
