@@ -126,10 +126,42 @@ def test_bilinear_mass_matrix():
     np.testing.assert_allclose(m.toarray(), expected_m, atol=1.0e-5)
 
 
-def test_invariant():
-    # TODO: Write test.
+def test_invariant_refinement():
 
-    pass
+    knots = [
+        [0] * 4 + [1 / 3, 2 / 3] + [1] * 4,
+        [0] * 4 + [1 / 3, 2 / 3] + [1] * 4,
+    ]
+    deg = [3, 3]
+    dim = 2
+
+    t = HierarchicalSpace(knots, deg, dim)
+    m = hierarchical_mass_matrix(t).toarray()
+    # symmetry
+    np.testing.assert_allclose(m, m.T)
+    # partition of unity
+    np.testing.assert_allclose(np.sum(m, axis=(0, 1)), np.ones(m.shape[1]))
+
+    cells = {0: [1, 4, 7]}
+    t = refine(t, cells)
+
+    m = hierarchical_mass_matrix(t).toarray()
+
+    # symmetry
+    np.testing.assert_allclose(m, m.T)
+    # partition of unity
+    np.testing.assert_allclose(np.sum(m, axis=(0, 1)), np.ones(m.shape[1]))
+
+    cells = {0: [0, 1, 2, 3], 1: [0, 1, 2, 3, 4, 5, 6, 7, 8]}
+    t = refine(t, cells)
+
+    m = hierarchical_mass_matrix(t).toarray()
+
+    # symmetry
+    np.testing.assert_allclose(m, m.T)
+    # partition of unity
+    np.testing.assert_allclose(np.sum(m, axis=(0, 1)), np.ones(m.shape[1]))
+
 
 def test_local_mass_matrix_univariate():
     knots = [
@@ -159,37 +191,3 @@ def test_local_mass_matrix_univariate_refined():
     m1 = local_mass_matrix(T, 1)
     assert m0.shape == (4, 4)
     assert m1.shape == (7, 7)
-
-
-if __name__ == '__main__':
-    knots = [
-        [0, 0, 0, 1, 2, 3, 3, 3],
-        [0, 0, 0, 1, 2, 3, 3, 3]
-    ]
-    deg = [2, 2]
-    dim = 2
-
-    t = HierarchicalSpace(knots, deg, dim)
-    cells = {0: [4]}
-    t = refine(t, cells)
-
-    cells[1] = [0, 1, 2, 3, 4, 5, 6, 7]
-    t = refine(t, cells)
-
-    N = 40
-    x = np.linspace(0, 3, N)
-    y = np.linspace(0, 3, N)
-    z = np.zeros((N, N))
-    for b in t.spaces[0].basis:
-        for i in range(N):
-            for j in range(N):
-                z[i, j] = b(np.array([x[i], y[j]]))
-        import matplotlib.pyplot as plt
-        from mpl_toolkits.mplot3d import Axes3D
-
-        fig = plt.figure()
-        axs = Axes3D(fig)
-
-        X, Y = np.meshgrid(x, y)
-        axs.plot_surface(X, Y, z)
-        plt.show()
