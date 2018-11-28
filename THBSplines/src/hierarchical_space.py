@@ -3,9 +3,9 @@ from typing import Union, List
 
 import numpy as np
 import scipy.sparse as sp
+from THBSplines.src.abstract_space import Space
 from THBSplines.src.hierarchical_mesh import HierarchicalMesh
 from THBSplines.src.tensor_product_space import TensorProductSpace
-from THBSplines.src.abstract_space import Space
 
 
 class HierarchicalSpace(Space):
@@ -67,7 +67,7 @@ class HierarchicalSpace(Space):
 
         c = self.projections[level]
         if self.truncated:
-            i = np.union1d(self.afunc_level[level+1], self.dfunc_level[level+1])
+            i = np.union1d(self.afunc_level[level + 1], self.dfunc_level[level + 1])
 
             c[i, :] = 0
         return c
@@ -105,6 +105,11 @@ class HierarchicalSpace(Space):
         # TODO: Not sure if the two following lines are needed
         self.afunc = reduce(np.union1d, afunc.values())
         self.dfunc = reduce(np.union1d, dfunc.values())
+
+        # TODO: Make sure this monkeypatch is not needed! In some cases, functions that should be deactivated are
+        # reactivated by this algorithm.
+        for key in dfunc:
+            afunc[key] = np.setdiff1d(afunc[key], dfunc[key])
 
         self.nfuncs_level = {level: len(self.afunc_level[level]) if level in self.afunc_level else 0 for level in
                              range(self.nlevels)}
@@ -203,7 +208,6 @@ class HierarchicalSpace(Space):
             func_on_deact_elements = np.union1d(func_on_deact_elements, func_on_active_elements)
 
             for level in range(1, self.nlevels):
-
                 I_row_idx = self.afunc_level[level]
                 I_col_idx = list(range(self.nfuncs_level[level]))
 
@@ -258,8 +262,9 @@ class HierarchicalSpace(Space):
         :param level:
         :return:
         """
+        eps = np.spacing(1)
         cells = self.mesh.meshes[level].cells
-        cells_to_mark = np.all((rectangle[:, 0] <= cells[:, :, 0]) & (rectangle[:, 1] >= cells[:, :, 1]),
+        cells_to_mark = np.all((rectangle[:, 0] <= cells[:, :, 0] + eps) & (eps + rectangle[:, 1] >= cells[:, :, 1]),
                                axis=1)
         return np.intersect1d(np.flatnonzero(cells_to_mark), self.mesh.aelem_level[level])
 

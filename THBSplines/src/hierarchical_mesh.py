@@ -88,9 +88,10 @@ class HierarchicalMesh(Mesh):
     def get_children(self, level: int, marked_cells_at_level) -> np.ndarray:
         children = np.array([])
         fine_cells = self.meshes[level + 1].cells
+        eps = np.spacing(1)
         for cell_idx in marked_cells_at_level:
             cell = self.meshes[level].cells[cell_idx]
-            i = np.flatnonzero(np.all((cell[:, 0] <= fine_cells[:, :, 0]) & (cell[:, 1] >= fine_cells[:, :, 1]),
+            i = np.flatnonzero(np.all((cell[:, 0] <= fine_cells[:, :, 0] + eps) & (eps + cell[:, 1] >= fine_cells[:, :, 1]),
                                       axis=1))
             children = np.union1d(children, i)
         return children.astype(np.int)

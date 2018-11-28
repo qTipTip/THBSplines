@@ -14,7 +14,7 @@ def integrate(bi, bj, points, weights):
 
 def translate_points(points, cell, weights):
     """
-    Translates the gauss-quadrature points to the cell
+    Translates the gauss-quadrature points to the cell.
     :param points:
     :param cell:
     :return:
@@ -127,7 +127,6 @@ def test_bilinear_mass_matrix():
 
 
 def test_invariant_refinement():
-
     knots = [
         [0] * 4 + [1 / 3, 2 / 3] + [1] * 4,
         [0] * 4 + [1 / 3, 2 / 3] + [1] * 4,

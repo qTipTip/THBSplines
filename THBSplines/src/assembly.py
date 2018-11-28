@@ -5,7 +5,7 @@ from THBSplines.lib.BSpline import integrate as cintegrate
 from tqdm import tqdm
 
 
-def hierarchical_mass_matrix(T):
+def hierarchical_mass_matrix(T, order=None):
     mesh = T.mesh
 
     n = T.nfuncs
@@ -19,7 +19,7 @@ def hierarchical_mass_matrix(T):
         ndofs_v += T.nfuncs_level[level]
 
         if mesh.nel_per_level[level] > 0:
-            M_local = local_mass_matrix(T, level)
+            M_local = local_mass_matrix(T, level, order)
 
             dofs_u = range(ndofs_u)
             dofs_v = range(ndofs_v)
@@ -53,7 +53,7 @@ def translate_points(points, cell, weights):
     return points, weights, area_cell
 
 
-def local_mass_matrix(T, level):
+def local_mass_matrix(T, level, order=None):
     active_cells = T.mesh.meshes[level].cells[T.mesh.aelem_level[level]]
 
     ndofs_u = T.spaces[level].nfuncs
@@ -61,7 +61,10 @@ def local_mass_matrix(T, level):
 
     M = sp.lil_matrix((ndofs_u, ndofs_v), dtype=np.float64)
 
-    points, weights = np.polynomial.legendre.leggauss(T.spaces[level].degrees[0] + 1)
+    if order is None:
+        order = T.spaces[level].degrees[0] + 1
+
+    points, weights = np.polynomial.legendre.leggauss(order)
     for cell in tqdm(active_cells, desc=f"level = {level}"):
         qp, qw, area = translate_points(points, cell, weights)
         dim = qp.shape[1]

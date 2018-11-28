@@ -141,9 +141,10 @@ class TensorProductSpace(Space):
         cells = np.array([], dtype=np.int)
         cells_map = {}
 
+        eps = np.spacing(1)
         for func in basis_function_list:
             supp = self.basis_supports[func]
-            condition = (self.mesh.cells[:, :, 0] >= supp[:, 0]) & (self.mesh.cells[:, :, 1] <= supp[:, 1])
+            condition = (self.mesh.cells[:, :, 0] + eps >= supp[:, 0]) & (self.mesh.cells[:, :, 1] <= supp[:, 1] + eps)
             i = np.flatnonzero(np.all(condition, axis=1))
             cells = np.union1d(cells, i)
             cells_map[func] = i

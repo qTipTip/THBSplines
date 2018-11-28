@@ -123,3 +123,47 @@ def test_change_of_basis_matrix_linear():
         [0, 0, 0.5, 0.5],
         [0, 0, 0, 1]
     ]))
+
+def test_full_mesh_refine():
+    knots = np.array([
+        [0, 0, 1, 1],
+        [0, 0, 1, 1]
+    ], dtype=np.float64)
+    deg = [1, 1]
+    dim = 2
+    T = HierarchicalSpace(knots, deg, dim)
+
+    np.testing.assert_equal(T.nfuncs_level, {
+        0: 4
+    })
+
+    cells = {}
+    rectangle = np.array([[0, 1 + np.spacing(1)], [0, 1 + np.spacing(1)]], dtype=np.float64)
+    cells[0] = T.refine_in_rectangle(rectangle, 0)
+    T = refine(T, cells)
+
+    np.testing.assert_equal(T.nfuncs_level, {
+        0: 0,
+        1: 9,
+    })
+
+
+
+    cells[1] = T.refine_in_rectangle(rectangle, 1)
+    T = refine(T, cells)
+
+    np.testing.assert_equal(T.nfuncs_level, {
+        0: 0,
+        1: 0,
+        2: 25
+    })
+
+    cells[2] = T.refine_in_rectangle(rectangle, 2)
+    T = refine(T, cells)
+
+    np.testing.assert_equal(T.nfuncs_level, {
+        0: 0,
+        1: 0,
+        2: 0,
+        3: 81
+    })
