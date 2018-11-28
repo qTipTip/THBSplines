@@ -4,7 +4,7 @@ from THBSplines.src.hierarchical_space import HierarchicalSpace
 from THBSplines.src.refinement import refine
 
 
-def create_subdivision_matrix(hspace: HierarchicalSpace, mode='reduced') -> dict:
+def create_subdivision_matrix(hspace: HierarchicalSpace) -> dict:
     """
     Returns hspace.nlevels-1 matrices used for representing coarse B-splines in terms of the finer B-splines.
     :param hspace: HierarchicalSpace containing the needed information
@@ -17,34 +17,11 @@ def create_subdivision_matrix(hspace: HierarchicalSpace, mode='reduced') -> dict
     C[0] = sp.identity(hspace.spaces[0].nfuncs, format='lil')
     C[0] = C[0][:, hspace.afunc_level[0]]
 
-
-    if mode == 'reduced':
-        func_on_active_elements = hspace.spaces[0].get_basis_functions(mesh.aelem_level[0])
-        func_on_deact_elements = hspace.spaces[0].get_basis_functions(mesh.delem_level[0])
-        func_on_deact_elements = np.union1d(func_on_deact_elements, func_on_active_elements)
-
-        for level in range(1, hspace.nlevels):
-            # I = sp.identity(hspace.spaces[level].nfuncs, format='lil')
-            # I = I[:, hspace.afunc_level[level]]
-
-            I_row_idx = hspace.afunc_level[level]
-            I_col_idx = list(range(hspace.nfuncs_level[level]))
-
-            data = np.ones(len(I_col_idx))
-            I = sp.coo_matrix((data, (I_row_idx, I_col_idx)))
-            aux = sp.lil_matrix(hspace.get_basis_conversion_matrix(level - 1))[:, func_on_deact_elements]
-
-            func_on_active_elements = hspace.spaces[level].get_basis_functions(mesh.aelem_level[level])
-            func_on_deact_elements = hspace.spaces[level].get_basis_functions(mesh.delem_level[level])
-            func_on_deact_elements = np.union1d(func_on_deact_elements, func_on_active_elements)
-            C[level] = sp.hstack([aux @ C[level - 1], I])
-        return C
-    else:
-        for level in range(1, hspace.nlevels):
-            I = sp.identity(hspace.spaces[level].nfuncs, format='lil')
-            aux = sp.lil_matrix(hspace.get_basis_conversion_matrix(level-1))
-            C[level] = sp.hstack([aux @ C[level - 1], I[:, hspace.afunc_level[level]]])
-        return C
+    for level in range(1, hspace.nlevels):
+        I = sp.identity(hspace.spaces[level].nfuncs, format='lil')
+        aux = sp.lil_matrix(hspace.get_basis_conversion_matrix(level-1))
+        C[level] = sp.hstack([aux @ C[level - 1], I[:, hspace.afunc_level[level]]])
+    return C
 
 
 
