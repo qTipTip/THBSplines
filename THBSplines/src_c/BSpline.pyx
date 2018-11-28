@@ -113,19 +113,10 @@ cdef evaluate_single_basis_derivative(x, degree, knots, end, r):
     cdef double eps = 1.0e-14
 
     cdef double left, right
+    print('Hello', r, degree)
     if r > 0:
         left = evaluate_single_basis_derivative(x, degree - 1, knots[:n-1], end, r-1)
         right = evaluate_single_basis_derivative(x, degree - 1, knots[1:n], end, r-1)
-
-        if denom_left < eps:
-            left = 0
-        else:
-            left *= denom_left
-        if denom_right < eps:
-            right = 0
-        else:
-            right = denom_right
-        return degree * (left - right)
 
     else:
         left = evaluate_single_basis_function(x, degree - 1, knots[:n-1], end)
@@ -134,12 +125,16 @@ cdef evaluate_single_basis_derivative(x, degree, knots, end, r):
     if denom_left < eps:
         left = 0
     else:
-        left *= denom_left
+        left *= (x - knots[0]) / denom_left
     if denom_right < eps:
         right = 0
     else:
-        right = denom_right
-    return degree * (left - right)
+        right *= (knots[n-1] - x) / denom_right
+
+    if r == 0:
+        return left + right
+    else:
+        return degree * (left + right) / (degree - 1)
 
 
 cdef evaluate_single_basis_derivative_vectorized(x, degree, knots, evaluate_end, r):
