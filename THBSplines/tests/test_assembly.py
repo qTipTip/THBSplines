@@ -152,7 +152,7 @@ def test_invariant_refinement():
     # partition of unity
     np.testing.assert_allclose(np.sum(m, axis=(0, 1)), np.ones(m.shape[1]))
 
-    cells = {0: [0, 1, 2, 3], 1: [0, 1, 2, 3, 4, 5, 6, 7, 8]}
+    cells = {0: [0], 1: [0, 1, 2, 3]}
     t = refine(t, cells)
 
     m = hierarchical_mass_matrix(t).toarray()

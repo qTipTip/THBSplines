@@ -66,13 +66,16 @@ def local_mass_matrix(T, level):
         qp, qw, area = translate_points(points, cell, weights)
         dim = qp.shape[1]
         active_basis_functions = T.spaces[level].get_functions_on_rectangle(cell)
-        for i in active_basis_functions:
+        for glob_ind_i, i in enumerate(active_basis_functions):
             bi = T.spaces[level].basis[i]
-            for j in active_basis_functions:
+            for glob_ind_j, j in enumerate(active_basis_functions[glob_ind_i:]):
                 bj = T.spaces[level].basis[j]
                 bi_values, bj_values = bi(qp), bj(qp)
                 val = cintegrate(bi_values, bj_values, qw, area, dim)
                 M[i, j] += val
+                if i == j:
+                    continue
+                M[j, i] += val
 
     return M
 

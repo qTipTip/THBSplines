@@ -21,6 +21,7 @@ class CartesianMesh(Mesh):
         self.dim = parametric_dimension
         self.cells = self.compute_cells()
         self.nelems = len(self.cells)
+        self.cell_area = np.prod(np.diff(self.cells[0][:]))
 
     def compute_cells(self) -> np.ndarray:
         """

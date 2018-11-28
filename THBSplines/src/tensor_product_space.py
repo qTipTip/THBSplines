@@ -19,6 +19,7 @@ class TensorProductSpace(Space):
 
         self.construct_basis()
         self.nfuncs = len(self.basis)
+        self.cell_area = self.mesh.cell_area
 
     def cell_to_basis(self, cell_indices: Union[np.ndarray, List[int]]) -> np.ndarray:
         basis_idx = []

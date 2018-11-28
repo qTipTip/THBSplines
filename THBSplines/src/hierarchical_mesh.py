@@ -29,6 +29,7 @@ class HierarchicalMesh(Mesh):
         self.delem_level = {0: np.array([], dtype=np.int)}  # deactivated elements on level
         self.nel_per_level = {0: self.meshes[0].nelems}
         self.nel = self.meshes[0].nelems
+        self.cell_area_per_level = {0: self.meshes[0].cell_area}
 
     def add_level(self):
         """
@@ -39,6 +40,8 @@ class HierarchicalMesh(Mesh):
 
         self.aelem_level[self.nlevels - 1] = (np.array([], dtype=np.int))
         self.delem_level[self.nlevels - 1] = (np.array([], dtype=np.int))
+        self.cell_area_per_level[self.nlevels - 1] = self.meshes[-1].cell_area
+
 
     def refine(self, marked_cells: dict):
         """
