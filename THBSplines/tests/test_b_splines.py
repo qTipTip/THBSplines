@@ -29,13 +29,14 @@ def test_b_spline_evaluation_linear_vectorized():
 
     np.testing.assert_allclose(y_computed, y_expected)
 
+
 def test_b_spline_evaluation_derivatives_vectorized():
     knots = np.array([0, 1, 2, 3], dtype=np.float64)
 
     d = 2
     B = BSpline(d, knots)
-    Bl = BSpline(d-1, knots[:-1])
-    Br = BSpline(d-1, knots[1:])
+    Bl = BSpline(d - 1, knots[:-1])
+    Br = BSpline(d - 1, knots[1:])
 
     @np.vectorize
     def exact(x):
@@ -52,10 +53,12 @@ def test_b_spline_evaluation_derivatives_vectorized():
 
     np.testing.assert_allclose(y_computed, y_expected)
 
+
 def test_b_spline_derivative_single_linear():
     knots = np.array([0, 1, 2], dtype=np.float64)
     d = 1
     B = BSpline(d, knots)
+
     @np.vectorize
     def exact(x):
         if 0 <= x < 1:
@@ -69,6 +72,7 @@ def test_b_spline_derivative_single_linear():
     y_computed = B.derivative(x, 1)
     y_expected = exact(x)
     np.testing.assert_allclose(y_computed, y_expected)
+
 
 def test_b_spline_equality():
     B1 = BSpline(2, np.array([0, 1, 2, 3], dtype=np.float64))
@@ -116,3 +120,27 @@ def test_tensor_product_b_splines_quadratic():
     y_expected = eexact(x)
     y_computed = B(x)
     np.testing.assert_allclose(y_computed, y_expected)
+
+
+def test_tensor_product_b_splines_linear_grad():
+    knots = np.array([[0, 1, 2], [0, 1, 2]], dtype=np.float64)
+    degrees = np.array([1, 1], dtype=np.intc)
+    B = TensorProductBSpline(degrees, knots)
+
+    x = np.array([
+        [0.5, 0.5],
+        [1.5, 0.5],
+        [0.5, 1.5],
+        [1.5, 1.5]
+    ])
+
+    expected_gradient = np.array([
+        [0.5, 0.5],
+        [-0.5, 0.5],
+        [0.5, -0.5],
+        [-0.5, -0.5]
+    ])
+
+    computed_gradient = B.grad(x)
+
+    np.testing.assert_allclose(computed_gradient, expected_gradient)

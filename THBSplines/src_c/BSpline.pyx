@@ -161,10 +161,13 @@ cdef class BSpline:
     def __call__(self, x):
         return self.evaluate(np.array(x, dtype=np.float64))
 
+    def D(self, x, r):
+        return self.derivative(np.array(x, dtype=np.float64), r)
+
     cdef evaluate(BSpline self, double[:] x):
         return evaluate_single_basis_function_vectorized(x, self.degree, self.knots, self.evaluate_end)
 
-    cpdef derivative(BSpline self, double[:] x, r):
+    cdef derivative(BSpline self, double[:] x, r):
         return evaluate_single_basis_derivative_vectorized(x, self.degree, self.knots, self.evaluate_end, r)
 
     @cython.boundscheck(False)
@@ -219,18 +222,54 @@ cdef class TensorProductBSpline:
                 out_vector[i] *= temp_vector[i, j]
         return out_vector
 
-    def evaluate_gridded_data(self, x):
-        n = x.shape[0]
-        dim = x.shape[1]
-        shape = tuple([n for _ in range(dim)])
-        print(shape)
-        z = np.zeros(shape = shape, dtype=np.float64)
-        print(z.shape)
-        for i, _ in np.ndenumerate(x):
-            point = np.array([x[i[d], d] for d in range(dim)], dtype=np.float64)
-            z[i] = self(point)
-        return z
+    cdef double _single_grad(self, double[:] x):
+        """
+        Evalautes the gradient in a single point.
+        :param x: point of evaluation
+        :return: gradient vector
+        """
 
+        cdef int n = self.parametric_dimension
+        cdef double[:] grad = np.zeros(n)
+        cdef double[:] vals = np.zeros(n)
+
+        print(list(x))
+
+        cdef Py_ssize_t i, j
+        for i in range(n):
+            grad[i] = self.univariate_b_splines[i].D(x[i], 1)
+            vals[i] = self.univariate_b_splines[i](x[i])
+
+        for i in range(n):
+            for j in range(n):
+                if i != j:
+                    grad[i] *= vals[j]
+        return grad[i]
+
+    cpdef grad(self, double[:, :] x):
+        """
+        Computes the gradient vector (d/dx1, d/dx2, ..., d/dxn) at a list of points.
+        :param x: list of points to evaluate the gradient in
+        :return: list of gradient vectors
+        """
+        cdef int n = x.shape[0]
+        cdef np.ndarray[np.float64_t, ndim=2] out_vector = np.ones((n, self.parametric_dimension), dtype=np.float64)
+        cdef Py_ssize_t i, j
+
+        cdef np.ndarray[np.float64_t, ndim=2] grads = np.zeros((n, self.parametric_dimension), dtype=np.float64)
+        cdef np.ndarray[np.float64_t, ndim=2] vals = np.zeros((n, self.parametric_dimension), dtype=np.float64)
+
+        for i in range(self.parametric_dimension):
+            grads[:, i] = self.univariate_b_splines[i].D(x[:, i], 1)
+            vals[:, i] = self.univariate_b_splines[i](x[:, i])
+
+        for i in range(self.parametric_dimension):
+            for j in range(self.parametric_dimension):
+                if i == j:
+                    continue
+                grads[:, i] *= vals[:, j]
+
+        return grads
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
