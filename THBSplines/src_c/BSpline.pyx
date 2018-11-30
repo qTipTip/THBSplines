@@ -104,7 +104,10 @@ cpdef np.ndarray[np.float64_t, ndim=1] evaluate_single_basis_function_vectorized
         out_vector[i] = evaluate_single_basis_function(x[i], degree, knots, end)
     return result
 
-cpdef evaluate_single_basis_derivative(x, degree, knots, end, r):
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.cdivision(True)
+cdef double evaluate_single_basis_derivative(double x, int degree, double[:] knots, int end, int r):
 
     cdef int i = knot_index(knots, x, end)
     cdef int n = knots.shape[0]
@@ -134,7 +137,7 @@ cpdef evaluate_single_basis_derivative(x, degree, knots, end, r):
     return degree * (left - right)
 
 
-cdef evaluate_single_basis_derivative_vectorized(x, degree, knots, evaluate_end, r):
+cdef np.ndarray[np.float64_t, ndim=1] evaluate_single_basis_derivative_vectorized(double[:] x, int degree, double[:] knots, int evaluate_end, int r):
     cdef int n = x.shape[0]
     cdef np.ndarray[np.float64_t, ndim=1] result = np.zeros(n, dtype=np.float64)
     cdef Py_ssize_t i

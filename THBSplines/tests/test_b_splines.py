@@ -2,7 +2,6 @@ import numpy as np
 import pytest
 
 from THBSplines.lib.BSpline import BSpline, TensorProductBSpline
-from THBSplines.lib.BSpline import evaluate_single_basis_derivative
 
 
 @pytest.fixture
