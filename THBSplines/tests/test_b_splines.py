@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 
 from THBSplines.lib.BSpline import BSpline, TensorProductBSpline
+from THBSplines.lib.BSpline import evaluate_single_basis_derivative
 
 
 @pytest.fixture
@@ -40,7 +41,7 @@ def test_b_spline_evaluation_derivatives_vectorized():
     @np.vectorize
     def exact(x):
         if 0 <= x < 1:
-            return x
+            return x - 0.5
         elif 1 <= x < 2:
             return 1 - 2 * x
         else:
@@ -52,6 +53,23 @@ def test_b_spline_evaluation_derivatives_vectorized():
 
     np.testing.assert_allclose(y_computed, y_expected)
 
+def test_b_spline_derivative_single_linear():
+    knots = np.array([0, 1, 2], dtype=np.float64)
+    d = 1
+    B = BSpline(d, knots)
+    @np.vectorize
+    def exact(x):
+        if 0 <= x < 1:
+            return 1
+        elif 1 <= x < 2:
+            return -1
+        else:
+            return 0
+
+    x = np.linspace(0, 2, 10)
+    y_computed = B.derivative(x, 1)
+    y_expected = exact(x)
+    np.testing.assert_allclose(y_computed, y_expected)
 
 def test_b_spline_equality():
     B1 = BSpline(2, np.array([0, 1, 2, 3], dtype=np.float64))

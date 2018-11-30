@@ -74,7 +74,7 @@ cdef double evaluate_single_basis_function(double x, int degree, double[:] knots
 
 
     cdef double left, right
-    left = evaluate_single_basis_function(x, degree - 1, knots[:n-1], end)
+    left = evaluate_single_basis_function(x, degree - 1, knots[:n-1], 0)
     right = evaluate_single_basis_function(x, degree - 1, knots[1:n], end)
 
     cdef double denom_left = knots[n-2] - knots[0]
@@ -104,7 +104,7 @@ cpdef np.ndarray[np.float64_t, ndim=1] evaluate_single_basis_function_vectorized
         out_vector[i] = evaluate_single_basis_function(x[i], degree, knots, end)
     return result
 
-cdef evaluate_single_basis_derivative(x, degree, knots, end, r):
+cpdef evaluate_single_basis_derivative(x, degree, knots, end, r):
 
     cdef int i = knot_index(knots, x, end)
     cdef int n = knots.shape[0]
@@ -113,38 +113,33 @@ cdef evaluate_single_basis_derivative(x, degree, knots, end, r):
     cdef double eps = 1.0e-14
 
     cdef double left, right
-    print('Hello', r, degree)
-    if r > 0:
-        left = evaluate_single_basis_derivative(x, degree - 1, knots[:n-1], end, r-1)
-        right = evaluate_single_basis_derivative(x, degree - 1, knots[1:n], end, r-1)
+
+    if r == 1: # right hand side consists of evaluation only
+        left = evaluate_single_basis_function(x, degree-1, knots[:n-1], 0)
+        right = evaluate_single_basis_function(x, degree-1, knots[1:], end)
 
     else:
-        left = evaluate_single_basis_function(x, degree - 1, knots[:n-1], end)
-        right = evaluate_single_basis_function(x, degree - 1, knots[1:n], end)
-
+        left = evaluate_single_basis_derivative(x, degree-1, knots[:n-1], 0, r-1)
+        right = evaluate_single_basis_derivative(x, degree-1, knots[1:], end, r-1)
     if denom_left < eps:
         left = 0
     else:
-        left *= (x - knots[0]) / denom_left
+        left /= denom_left
+
     if denom_right < eps:
         right = 0
     else:
-        right *= (knots[n-1] - x) / denom_right
+        right /= denom_right
 
-    if r == 0:
-        return left + right
-    else:
-        return degree * (left + right) / (degree - 1)
+    return degree * (left - right)
 
 
 cdef evaluate_single_basis_derivative_vectorized(x, degree, knots, evaluate_end, r):
     cdef int n = x.shape[0]
     cdef np.ndarray[np.float64_t, ndim=1] result = np.zeros(n, dtype=np.float64)
-    cdef double[:] out_vector = result
-
     cdef Py_ssize_t i
     for i in range(n):
-        out_vector[i] = evaluate_single_basis_derivative(x[i], degree, knots, evaluate_end, r)
+        result[i] = evaluate_single_basis_derivative(x[i], degree, knots, evaluate_end, r)
     return result
 
 cdef class BSpline:
