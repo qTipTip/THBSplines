@@ -136,7 +136,8 @@ cdef double evaluate_single_basis_derivative(double x, int degree, double[:] kno
 
     return degree * (left - right)
 
-
+@cython.boundscheck(False)
+@cython.wraparound(False)
 cdef np.ndarray[np.float64_t, ndim=1] evaluate_single_basis_derivative_vectorized(double[:] x, int degree, double[:] knots, int evaluate_end, int r):
     cdef int n = x.shape[0]
     cdef np.ndarray[np.float64_t, ndim=1] result = np.zeros(n, dtype=np.float64)
