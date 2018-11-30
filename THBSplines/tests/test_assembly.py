@@ -70,7 +70,7 @@ def test_linear_mass_matrix():
     np.testing.assert_allclose(M.toarray(), expected_M)
 
 
-def test_bilinear_mass_matrix():
+def test_bilinear_mass_and_stiffness_matrix():
     knots = [
         [0, 0, 1 / 3, 2 / 3, 1, 1],
         [0, 0, 1 / 3, 2 / 3, 1, 1]
@@ -79,6 +79,7 @@ def test_bilinear_mass_matrix():
     dim = 2
 
     t = HierarchicalSpace(knots, deg, dim)
+
     cells = {0: [1]}
     t = refine(t, cells)
 
@@ -192,7 +193,7 @@ def test_local_mass_matrix_univariate_refined():
     assert m0.shape == (4, 4)
     assert m1.shape == (7, 7)
 
-def test_stiffness_matrix():
+def test_stiffness_matrix_single_basis_func():
     knots = [
         [0, 1, 2],
         [0, 1, 2]
@@ -203,3 +204,4 @@ def test_stiffness_matrix():
     a = hierarchical_stiffness_matrix(T).toarray()
 
     np.testing.assert_allclose(a, 8/3)
+
