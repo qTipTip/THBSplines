@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.integrate
 import scipy.sparse as sp
-from THBSplines.lib.BSpline import integrate as cintegrate
+from THBSplines.lib.BSpline import integrate as cintegrate, integrate_grad as cintegrate_grad
 from tqdm import tqdm
 
 
@@ -29,6 +29,29 @@ def hierarchical_mass_matrix(T, order=None):
 
     return M
 
+def hierarchical_stiffness_matrix(T, order=None):
+    mesh = T.mesh
+
+    n = T.nfuncs
+    M = sp.lil_matrix((n, n), dtype=np.float64)
+
+    ndofs_u = 0
+    ndofs_v = 0
+    C = T.create_subdivision_matrix('full')
+    for level in range(mesh.nlevels):
+        ndofs_u += T.nfuncs_level[level]
+        ndofs_v += T.nfuncs_level[level]
+
+        if mesh.nel_per_level[level] > 0:
+            M_local = local_stiffness_matrix(T, level, order)
+
+            dofs_u = range(ndofs_u)
+            dofs_v = range(ndofs_v)
+
+            ix = np.ix_(dofs_u, dofs_v)
+            M[ix] += C[level].T @ M_local @ C[level]
+
+    return M
 
 def translate_points(points, cell, weights):
     """
@@ -75,6 +98,35 @@ def local_mass_matrix(T, level, order=None):
                 bj = T.spaces[level].basis[j]
                 bi_values, bj_values = bi(qp), bj(qp)
                 val = cintegrate(bi_values, bj_values, qw, area, dim)
+                M[i, j] += val
+                if i == j:
+                    continue
+                M[j, i] += val
+
+    return M
+
+def local_stiffness_matrix(T, level, order=None):
+    active_cells = T.mesh.meshes[level].cells[T.mesh.aelem_level[level]]
+
+    ndofs_u = T.spaces[level].nfuncs
+    ndofs_v = T.spaces[level].nfuncs
+
+    M = sp.lil_matrix((ndofs_u, ndofs_v), dtype=np.float64)
+
+    if order is None:
+        order = T.spaces[level].degrees[0] + 1
+
+    points, weights = np.polynomial.legendre.leggauss(order)
+    for cell in tqdm(active_cells, desc=f"level = {level}"):
+        qp, qw, area = translate_points(points, cell, weights)
+        dim = qp.shape[1]
+        active_basis_functions = T.spaces[level].get_functions_on_rectangle(cell)
+        for glob_ind_i, i in enumerate(active_basis_functions):
+            bi = T.spaces[level].basis[i]
+            for glob_ind_j, j in enumerate(active_basis_functions[glob_ind_i:]):
+                bj = T.spaces[level].basis[j]
+                bi_values, bj_values = bi.grad(qp), bj.grad(qp)
+                val = cintegrate_grad(bi_values, bj_values, qw, area, dim)
                 M[i, j] += val
                 if i == j:
                     continue

@@ -285,3 +285,22 @@ cpdef double integrate(double[:] bi_values, double[:] bj_values, double[:] weigh
     I *= area / 2**dim
 
     return I
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.cdivision(True)
+cpdef double integrate_grad(double[:, :] bi_grad, double[:, :] bj_grad, double[:] weights, double area, int dim):
+
+    cdef double I = 0
+    cdef Py_ssize_t i, j
+    cdef int n = bi_grad.shape[0]
+    cdef double dot
+    for i in range(n):
+        dot = 0
+        for j in range(dim):
+            dot += bi_grad[i, j] * bj_grad[i, j]
+        I += weights[i] * dot
+
+    I *= area / 2**dim
+
+    return I
