@@ -1,4 +1,5 @@
 import numpy as np
+from THBSplines import create_subdivision_matrix
 from THBSplines.src.hierarchical_space import HierarchicalSpace
 from THBSplines.src.refinement import refine
 
@@ -167,3 +168,35 @@ def test_full_mesh_refine():
         2: 0,
         3: 81
     })
+
+
+def test_partition_of_unity():
+    knots = [
+        [0, 0, 0, 1, 2, 3, 3, 3],
+        [0, 0, 0, 1, 2, 3, 3, 3]
+    ]
+    d = 2
+    degrees = [2, 2]
+    T = HierarchicalSpace(knots, degrees, d)
+    marked_cells = {0: [0, 1, 2, 3]}
+    T = refine(T, marked_cells)
+    C = create_subdivision_matrix(T)
+    N = 5
+    x = np.linspace(0, 3, N)
+    y = np.linspace(0, 3, N)
+    z = np.zeros((N, N))
+
+
+    c = C[T.nlevels - 1]
+    c = c.toarray()
+    for i in range(T.nfuncs):
+        u = np.zeros(T.nfuncs)
+        u[i] = 1
+        u_fine = c @ u
+
+        f = T.spaces[T.nlevels - 1].construct_function(u_fine)
+        for i in range(N):
+            for j in range(N):
+                z[i, j] += f(np.array([x[i], y[j]]))
+
+    np.testing.assert_allclose(z, 1)
