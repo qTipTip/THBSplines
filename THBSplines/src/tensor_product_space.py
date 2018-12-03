@@ -65,7 +65,7 @@ class TensorProductSpace(Space):
             end_evals = []
             for j in range(dim):
                 new_knots.append(self.knots[j][idx_start_perm[i, j]: idx_stop_perm[i, j]])
-                end_evals.append(idx_stop_perm[i, j] == (len(self.knots[j])))
+                end_evals.append(idx_stop_perm[i, j] == len(self.knots[j]))
             new_knots = np.array(new_knots, dtype=np.float64)
             end_evals = np.array(end_evals, dtype=np.intc).ravel()
             new_b_spline = TensorProductBSpline(degrees, new_knots, end_evals)

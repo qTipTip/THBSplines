@@ -45,9 +45,9 @@ cdef int knot_index(double [:] knots, double x, int end):
                 return i
         return -1
     else:
-        for i in range(n-1):
-            if knots[i] < x <= knots[i+1]:
-                return i
+        for i in range(n-1, 0, -1):
+            if knots[i-1] < x <= knots[i]:
+                return i - 1
         return -1
 
 
@@ -74,7 +74,7 @@ cdef double evaluate_single_basis_function(double x, int degree, double[:] knots
 
 
     cdef double left, right
-    left = evaluate_single_basis_function(x, degree - 1, knots[:n-1], 0)
+    left = evaluate_single_basis_function(x, degree - 1, knots[:n-1], end)
     right = evaluate_single_basis_function(x, degree - 1, knots[1:n], end)
 
     cdef double denom_left = knots[n-2] - knots[0]
@@ -118,7 +118,7 @@ cdef double evaluate_single_basis_derivative(double x, int degree, double[:] kno
     cdef double left, right
 
     if r == 1: # right hand side consists of evaluation only
-        left = evaluate_single_basis_function(x, degree-1, knots[:n-1], 0)
+        left = evaluate_single_basis_function(x, degree-1, knots[:n-1], end)
         right = evaluate_single_basis_function(x, degree-1, knots[1:], end)
 
     else:

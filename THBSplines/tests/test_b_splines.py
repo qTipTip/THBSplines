@@ -9,7 +9,7 @@ def x():
     return np.array([0, 0, 0, 1, 2, 3, 4, 4, 4], dtype=np.float64)
 
 
-def test_b_spline_evaluation_linear_vectorized():
+def test_b_spline_evaluation_quadratic_vectorized():
     knots = np.array([0, 1, 2, 3], dtype=np.float64)
     d = 2
     B = BSpline(d, knots)
@@ -28,6 +28,24 @@ def test_b_spline_evaluation_linear_vectorized():
     y_expected = exact(x)
 
     np.testing.assert_allclose(y_computed, y_expected)
+
+def test_b_spline_evaluation_quadratic_vectorized_endpoint():
+    knots = np.array([0, 1, 1, 1], dtype=np.float64)
+    d = 2
+    B_endpoint = BSpline(d, knots, 1)
+    B_inner = BSpline(d, knots, 0)
+
+    x = np.ones(20)
+    x[:] = 1
+
+    y_computed_endpoint = B_endpoint(x)
+
+    y_computed_inner = B_inner(x)
+    y_expected_endpoint = np.ones(20)
+    y_expected_inner = np.zeros(20)
+
+    np.testing.assert_allclose(y_computed_inner, y_expected_inner)
+    np.testing.assert_allclose(y_computed_endpoint, y_expected_endpoint)
 
 
 def test_b_spline_evaluation_derivatives_vectorized():

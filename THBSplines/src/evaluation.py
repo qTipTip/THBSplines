@@ -34,13 +34,14 @@ if __name__ == '__main__':
     degrees = [1, 1]
     T = HierarchicalSpace(knots, degrees, d)
     marked_cells = {0: [0]}
-    T = refine(T, marked_cells)
-    C = create_subdivision_matrix(T, mode='full')
+    #T = refine(T, marked_cells)
+    C = create_subdivision_matrix(T)
     N = 30
     x = np.linspace(0, 3, N)
     y = np.linspace(0, 3, N)
     z = np.zeros((N, N))
 
+    X, Y = np.meshgrid(x, y)
     B = T.spaces[-1].basis
 
     c = C[T.nlevels-1]
@@ -56,10 +57,12 @@ if __name__ == '__main__':
 
         for i in range(N):
             for j in range(N):
-                z[i, j] += f(np.array([x[i], y[j]]))
+                z[i, j] = f(np.array([x[i], y[j]]))
 
 
-    import matplotlib.pyplot as plt
-    fig = T.mesh.plot_cells(return_fig=True)
-    plt.contourf(x, y, z)
-    plt.show()
+        import matplotlib.pyplot as plt
+        from mpl_toolkits.mplot3d import Axes3D
+        fig = T.mesh.plot_cells(return_fig=True)
+        axs = Axes3D(fig)
+        axs.plot_surface(X, Y, z, cmap='viridis')
+        plt.show()
