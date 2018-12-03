@@ -180,6 +180,8 @@ def test_partition_of_unity():
     T = HierarchicalSpace(knots, degrees, d)
     marked_cells = {0: [0, 1, 2, 3]}
     T = refine(T, marked_cells)
+    marked_cells = {0: [0, 1, 2, 3], 1: [0, 1, 2]}
+    T = refine(T, marked_cells)
     C = create_subdivision_matrix(T)
     N = 5
     x = np.linspace(0, 3, N)
