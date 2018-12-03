@@ -48,7 +48,7 @@ def test_b_spline_evaluation_derivatives_vectorized():
             return -3 + x
 
     x = np.linspace(0, 3, 20)
-    y_computed = B.derivative(x, 1)
+    y_computed = B.D(x, 1)
     y_expected = Bl(x) - Br(x)
 
     np.testing.assert_allclose(y_computed, y_expected)
@@ -69,7 +69,7 @@ def test_b_spline_derivative_single_linear():
             return 0
 
     x = np.linspace(0, 2, 10)
-    y_computed = B.derivative(x, 1)
+    y_computed = B.D(x, 1)
     y_expected = exact(x)
     np.testing.assert_allclose(y_computed, y_expected)
 
