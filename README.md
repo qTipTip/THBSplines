@@ -35,6 +35,8 @@ T = thb.refine(T, cells_to_refine)
 T.mesh.plot_cells()
 ```
 
+![](THBSplines/images/refined_mesh.png)
+
 ```python
 # If no integration order is specified, exact gauss quadrature suitable for the given basis is used.
 mass_matrix = thb.hierarchical_mass_matrix(T)
@@ -43,3 +45,5 @@ stiffness_matrix = thb.hierarchical_stiffness_matrix(T)
 plt.spy(mass_matrix, markersize=1)
 plt.show()
 ```
+
+![](THBSplines/images/mass_matrix.png)
