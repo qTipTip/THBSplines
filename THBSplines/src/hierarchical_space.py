@@ -3,6 +3,7 @@ from typing import Union, List
 
 import numpy as np
 import scipy.sparse as sp
+
 from THBSplines.src.abstract_space import Space
 from THBSplines.src.hierarchical_mesh import HierarchicalMesh
 from THBSplines.src.tensor_product_space import TensorProductSpace
@@ -268,6 +269,42 @@ class HierarchicalSpace(Space):
                                axis=1)
         return np.intersect1d(np.flatnonzero(cells_to_mark), self.mesh.aelem_level[level])
 
+    def plot_overloading(self):
+        import matplotlib.pyplot as plt
+        import matplotlib.patches as plp
+        fig = plt.figure()
+        axs = fig.add_subplot(1, 1, 1)
+        u_min = 0
+        u_max = 1
+        v_min = 0
+        v_max = 1
+        C = self.create_subdivision_matrix('full')
+        max_degree = np.prod([d + 1 for d in self.degrees])
+        for level in range(self.nlevels):
+            indices = self.spaces[level].cell_to_basis(self.mesh.aelem_level[level])
+            Csub = sp.lil_matrix(C[level])
+            mesh = self.mesh.meshes[level]
+            for cell, i_elem in zip(self.mesh.aelem_level[level], indices):
+                _, col, _ = sp.find(Csub[i_elem, :])
+                n = len(np.unique(col))
+                if n > max_degree:
+                    color = 'red'
+                else:
+                    color = 'green'
+                e = mesh.cells[cell]
+                w = e[0, 1] - e[0, 0]
+                h = e[1, 1] - e[1, 0]
+
+                axs.add_patch(plp.Rectangle((e[0, 0], e[1, 0]), w, h, fill=True, color=color, alpha=0.2))
+
+                v_min = min(v_min, e[1, 0])
+                v_max = max(v_max, e[1, 1])
+                u_min = min(u_min, e[0, 0])
+                u_max = max(u_max, e[0, 1])
+
+        plt.xlim(u_min, u_max)
+        plt.ylim(v_min, v_max)
+        plt.show()
 
 if __name__ == '__main__':
     knots = [

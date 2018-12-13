@@ -16,5 +16,5 @@ setup(
     author_email='',
     description='',
     zip_safe=False,
-    ext_modules=cythonize(ext_modules, annotate=True)
+    ext_modules=cythonize(ext_modules, annotate=True, install_requires=['matplotlib'])
 )

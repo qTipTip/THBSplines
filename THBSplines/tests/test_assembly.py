@@ -1,8 +1,9 @@
 import numpy as np
+
 from THBSplines import hierarchical_stiffness_matrix
+from THBSplines.src.assembly import hierarchical_mass_matrix, local_mass_matrix
 from THBSplines.src.hierarchical_space import HierarchicalSpace
 from THBSplines.src.refinement import refine
-from THBSplines.src.assembly import hierarchical_mass_matrix, local_mass_matrix
 
 
 def integrate(bi, bj, points, weights):
@@ -193,6 +194,7 @@ def test_local_mass_matrix_univariate_refined():
     assert m0.shape == (4, 4)
     assert m1.shape == (7, 7)
 
+
 def test_stiffness_matrix_single_basis_func():
     knots = [
         [0, 1, 2],
@@ -203,5 +205,4 @@ def test_stiffness_matrix_single_basis_func():
     T = HierarchicalSpace(knots, deg, dim)
     a = hierarchical_stiffness_matrix(T).toarray()
 
-    np.testing.assert_allclose(a, 8/3)
-
+    np.testing.assert_allclose(a, 8 / 3)
