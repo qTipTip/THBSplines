@@ -1,92 +1,57 @@
 import numpy as np
+from THBSplines.src.tensor_product_space import TensorProductSpace
 
-from THBSplines.src.TensorProductSpace import TensorProductSpace
 
-
-def test_univariate_space():
+def test_refine():
     knots = [
-        [0, 0, 1, 2, 3, 4, 4]
+        [0, 1, 2],
+        [0, 1, 2]
     ]
+    d = 2
+    degrees = [1, 1]
+    T = TensorProductSpace(knots, degrees, d)
 
-    d = [1]
-    dim = 1
+    np.testing.assert_allclose(T.mesh.cells, np.array([
+        [[0, 1], [0, 1]],
+        [[1, 2], [0, 1]],
+        [[0, 1], [1, 2]],
+        [[1, 2], [1, 2]]
+    ]))
 
-    S = TensorProductSpace(d, knots, dim)
+    T1, proj = T.refine()
+    np.testing.assert_allclose(T1.mesh.cells, np.array([
+        [[0, 0.5], [0, 0.5]],
+        [[0.5, 1], [0, 0.5]],
+        [[1, 1.5], [0, 0.5]],
+        [[1.5, 2], [0, 0.5]],
 
-    S2, proj = S.refine()
+        [[0, 0.5], [0.5, 1]],
+        [[0.5, 1], [0.5, 1]],
+        [[1, 1.5], [0.5, 1]],
+        [[1.5, 2], [0.5, 1]],
 
-    expected_proj = np.array([
-        [1, 0.5, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0.5, 1, 0.5, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0.5, 1, 0.5, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0.5, 1, 0.5, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0.5, 1],
-    ]).T
+        [[0, 0.5], [1, 1.5]],
+        [[0.5, 1], [1, 1.5]],
+        [[1, 1.5], [1, 1.5]],
+        [[1.5, 2], [1, 1.5]],
 
-    np.testing.assert_allclose(proj, expected_proj)
-
-
-def test_bivariate_space():
-    knots = [
-        [0, 0, 1, 1],
-        [0, 0, 1, 1]
-    ]
-
-    d = [1, 1]
-    dim = 2
-
-    S = TensorProductSpace(d, knots, dim)
-    S2, proj = S.refine()
-
-    expected_proj = np.array([
-        [1., 0., 0., 0.],
-        [0.5, 0.5, 0., 0.],
-        [0., 1., 0., 0.],
-        [0.5, 0., 0.5, 0.],
-        [0.25, 0.25, 0.25, 0.25],
-        [0., 0.5, 0., 0.5],
-        [0., 0., 1., 0.],
-        [0., 0., 0.5, 0.5],
-        [0., 0., 0., 1.]])
-    np.testing.assert_allclose(proj, expected_proj)
-
-
-def test_get_basis_functions():
-    knots = [
-        [0, 0, 1, 2, 3, 3]
-    ]
-    d = [1]
-    dim = 1
-    S = TensorProductSpace(d, knots, dim)
-
-    assert S.get_basis_functions(0) == {0, 1}
-    assert S.get_basis_functions(1) == {1, 2}
-    assert S.get_basis_functions(2) == {2, 3}
-    assert S.get_basis_functions([0, 1]) == {0, 1, 2}
+        [[0, 0.5], [1.5, 2]],
+        [[0.5, 1], [1.5, 2]],
+        [[1, 1.5], [1.5, 2]],
+        [[1.5, 2], [1.5, 2]],
+    ]))
 
 
 def test_get_cells():
     knots = [
-        [0, 0, 1, 2, 3, 3]
+        [0, 0, 1, 2, 2],
+        [0, 0, 1, 2, 2]
     ]
-    d = [1]
-    dim = 1
-    S = TensorProductSpace(d, knots, dim)
+    d = 2
+    deg = [1, 1]
+    T = TensorProductSpace(knots, deg, d)
 
-    assert S.get_cells(0) == [{0}]
-    assert S.get_cells(1) == [{0, 1}]
-    assert S.get_cells(2) == [{1, 2}]
-    assert S.get_cells([1, 2]) == [{0, 1}, {1, 2}]
+    funcs_to_deact = np.array([0, 1, 3, 4])
 
-
-def test_get_neighbours():
-    knots = [
-        [0, 0, 1, 2, 3, 3]
-    ]
-    d = [1]
-    dim = 1
-    S = TensorProductSpace(d, knots, dim)
-
-    assert S.get_neighbours(0) == [{1}]
-    assert S.get_neighbours(1) == [{0, 2}]
-    assert S.get_neighbours([0, 1]) == [{1}, {0, 2}]
+    cells, cells_map = T.get_cells(funcs_to_deact)
+    np.testing.assert_equal(cells_map, {0 : [0], 1: [0, 1], 3 : [0, 2], 4 : [0, 1, 2, 3]})
