@@ -232,7 +232,7 @@ class HierarchicalSpace(Space):
                                axis=1)
         return np.intersect1d(np.flatnonzero(cells_to_mark), self.mesh.aelem_level[level])
 
-    def plot_overloading(self, filename=None):
+    def plot_overloading(self, filename=None, text=False, fontsize=None):
         import matplotlib.pyplot as plt
         import matplotlib.patches as plp
         fig = plt.figure()
@@ -254,16 +254,28 @@ class HierarchicalSpace(Space):
                     color = 'black'
                     fill=True
                     hatch = '//'
+                    dotext = True
                 else:
                     color = 'black'
                     hatch = None
                     fill=False
+                    dotext = False
+
                 e = mesh.cells[cell]
                 w = e[0, 1] - e[0, 0]
                 h = e[1, 1] - e[1, 0]
+                mp1 = e[0, 0] + w / 2
+                mp2 = e[1, 0] + h / 2
 
                 axs.add_patch(plp.Rectangle((e[0, 0], e[1, 0]), w, h, fill=fill, color=color, alpha=0.2, hatch=None, linewidth=0.2))
+                if text:
+                    if not dotext:
+                        continue
+                    if fontsize is None:
+                        fontsize = 50
 
+                    axs.text(mp1, mp2, '{}'.format(n - max_degree), ha='center',
+                             va='center', fontsize=fontsize * w)
                 v_min = min(v_min, e[1, 0])
                 v_max = max(v_max, e[1, 1])
                 u_min = min(u_min, e[0, 0])
