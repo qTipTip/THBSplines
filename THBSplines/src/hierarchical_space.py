@@ -146,49 +146,12 @@ class HierarchicalSpace(Space):
             marked_functions[level] = func_to_deact
         return marked_functions
 
-    def plot_overloading(self):
-        """
-        Plots the cells along with the number of active functions on each element.
-        """
-        import matplotlib.pyplot as plt
-
-        max_active_funcs = np.prod([d + 1 for d in self.degrees])
-        all_cells = self._get_all_cells()
-        overloading = self._get_overloading(all_cells)
-
-        fig = plt.figure()
-
-        for i, cell in enumerate(all_cells):
-            x = cell[0, [0, 1, 1, 0, 0]]
-            y = cell[1, [0, 0, 1, 1, 0]]
-
-            mx = cell[0, 0] + np.diff(cell[0, :] / 2)
-            my = cell[1, 0] + np.diff(cell[1, :] / 2)
-
-            plt.plot(x, y, color='black')
-            plt.text(mx, my, '{}'.format(overloading[i]))
-        plt.show()
-
     def _get_all_cells(self):
         all_cells = []
         for i, mesh in enumerate(self.mesh.meshes):
             for cell in mesh.cells[self.mesh.aelem_level[i]]:
                 all_cells.append(cell)
         return np.array(all_cells)
-
-    def _get_overloading(self, all_cells):
-        overloading = {i: 0 for i in range(len(all_cells))}  # element index to number of active functions
-
-        truncated_supports = self._get_truncated_supports()
-        for f in truncated_supports:
-            print(f, truncated_supports[f])
-        for i in truncated_supports:
-            supp_cells = truncated_supports[i]
-            for j, cell in enumerate(all_cells):
-                condition = np.all((supp_cells[:, :, 0] >= cell[:, 0]) & (supp_cells[:, :, 1] <= cell[:, 1]), axis=1)
-                if np.any(condition):
-                    overloading[j] += 1
-        return overloading
 
     def create_subdivision_matrix(self, mode='reduced') -> dict:
         """
@@ -299,7 +262,7 @@ class HierarchicalSpace(Space):
                 w = e[0, 1] - e[0, 0]
                 h = e[1, 1] - e[1, 0]
 
-                axs.add_patch(plp.Rectangle((e[0, 0], e[1, 0]), w, h, fill=fill, color=color, alpha=0.2, hatch=None))
+                axs.add_patch(plp.Rectangle((e[0, 0], e[1, 0]), w, h, fill=fill, color=color, alpha=0.2, hatch=None, linewidth=0.2))
 
                 v_min = min(v_min, e[1, 0])
                 v_max = max(v_max, e[1, 1])
