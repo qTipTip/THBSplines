@@ -269,7 +269,7 @@ class HierarchicalSpace(Space):
                                axis=1)
         return np.intersect1d(np.flatnonzero(cells_to_mark), self.mesh.aelem_level[level])
 
-    def plot_overloading(self):
+    def plot_overloading(self, filename=None):
         import matplotlib.pyplot as plt
         import matplotlib.patches as plp
         fig = plt.figure()
@@ -308,6 +308,10 @@ class HierarchicalSpace(Space):
 
         plt.xlim(u_min, u_max)
         plt.ylim(v_min, v_max)
+
+        if filename is not None:
+            plt.savefig(filename)
+
         plt.show()
 
 if __name__ == '__main__':
