@@ -288,14 +288,18 @@ class HierarchicalSpace(Space):
                 _, col, _ = sp.find(Csub[i_elem, :])
                 n = len(np.unique(col))
                 if n > max_degree:
-                    color = 'red'
+                    color = 'black'
+                    fill=True
+                    hatch = '//'
                 else:
-                    color = 'green'
+                    color = 'black'
+                    hatch = None
+                    fill=False
                 e = mesh.cells[cell]
                 w = e[0, 1] - e[0, 0]
                 h = e[1, 1] - e[1, 0]
 
-                axs.add_patch(plp.Rectangle((e[0, 0], e[1, 0]), w, h, fill=True, color=color, alpha=0.2))
+                axs.add_patch(plp.Rectangle((e[0, 0], e[1, 0]), w, h, fill=fill, color=color, alpha=0.2, hatch=None))
 
                 v_min = min(v_min, e[1, 0])
                 v_max = max(v_max, e[1, 1])
