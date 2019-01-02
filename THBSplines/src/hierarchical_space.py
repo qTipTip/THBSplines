@@ -286,8 +286,61 @@ class HierarchicalSpace(Space):
 
         if filename is not None:
             plt.savefig(filename)
+        else:
+            plt.show()
 
-        plt.show()
+    def plot_basis_weights(self, weights, filename=None):
+        import matplotlib.pyplot as plt
+        import matplotlib.patches as plp
+        fig = plt.figure()
+        axs = fig.add_subplot(1, 1, 1)
+        u_min = 0
+        u_max = 1
+        v_min = 0
+        v_max = 1
+        C = self.create_subdivision_matrix('full')
+        Csub_last = C[self.nlevels - 1].toarray()
+        max_degree = np.prod([d + 1 for d in self.degrees])
+        for level in range(self.nlevels):
+            indices = self.spaces[level].cell_to_basis(self.mesh.aelem_level[level])
+            print(indices)
+            Csub = sp.lil_matrix(C[level])
+            mesh = self.mesh.meshes[level]
+            for cell, i_elem in zip(self.mesh.aelem_level[level], indices):
+                _, col, _ = sp.find(Csub[i_elem, :])
+                print(col)
+                n = len(np.unique(col))
+                print(Csub_last)
+                if n > max_degree:
+                    color = 'black'
+                    fill = True
+                    hatch = '//'
+                    dotext = True
+                else:
+                    color = 'black'
+                    hatch = None
+                    fill = False
+                    dotext = False
+
+                e = mesh.cells[cell]
+                w = e[0, 1] - e[0, 0]
+                h = e[1, 1] - e[1, 0]
+
+                axs.add_patch(plp.Rectangle((e[0, 0], e[1, 0]), w, h, fill=fill, color=color, alpha=0.2, hatch=None,
+                                            linewidth=0.2))
+
+                v_min = min(v_min, e[1, 0])
+                v_max = max(v_max, e[1, 1])
+                u_min = min(u_min, e[0, 0])
+                u_max = max(u_max, e[0, 1])
+
+        plt.xlim(u_min, u_max)
+        plt.ylim(v_min, v_max)
+
+        if filename is not None:
+            plt.savefig(filename)
+        else:
+            plt.show()
 
 if __name__ == '__main__':
     knots = [
@@ -300,3 +353,5 @@ if __name__ == '__main__':
     marked_cells = {0: [0, 1, 2, 3, 4]}
     T.mesh.plot_cells()
     T.mesh.plot_cells()
+    weights = np.random.random(T.nfuncs)
+    T.plot_basis_weights(weights)

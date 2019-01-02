@@ -1,6 +1,6 @@
 import numpy as np
 
-from THBSplines import hierarchical_stiffness_matrix
+from THBSplines import hierarchical_stiffness_matrix, local_stiffness_matrix
 from THBSplines.src.assembly import hierarchical_mass_matrix, local_mass_matrix
 from THBSplines.src.hierarchical_space import HierarchicalSpace
 from THBSplines.src.refinement import refine
@@ -206,3 +206,23 @@ def test_stiffness_matrix_single_basis_func():
     a = hierarchical_stiffness_matrix(T).toarray()
 
     np.testing.assert_allclose(a, 8 / 3)
+
+def test_stiffness_matrix_subregion():
+    knots = [
+        [0, 0, 0, 0, 1, 1, 1, 1],
+        [0, 0, 0, 0, 1, 1, 1, 1]
+    ]
+    # domain = np.array([[0, 1.0], [0, 1]])
+    deg = [3, 3]
+    dim = 2
+    T = HierarchicalSpace(knots, deg, dim)
+
+    m = hierarchical_mass_matrix(T).toarray().ravel()
+    m_local = local_mass_matrix(T, level=0, element_indices=[0]).toarray().ravel()
+
+    a = hierarchical_stiffness_matrix(T).toarray().ravel()
+    a_local = local_stiffness_matrix(T, level=0, element_indices=[0]).toarray().ravel()
+
+    assert np.all(np.in1d(m_local, m))
+    assert np.all(np.in1d(a_local, a))
+

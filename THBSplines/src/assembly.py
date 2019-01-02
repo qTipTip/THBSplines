@@ -5,7 +5,7 @@ from THBSplines.lib.BSpline import integrate as cintegrate, integrate_grad as ci
 from tqdm import tqdm
 
 
-def hierarchical_mass_matrix(T, order=None):
+def hierarchical_mass_matrix(T, order=None, integration_region=None):
     mesh = T.mesh
 
     n = T.nfuncs
@@ -15,11 +15,16 @@ def hierarchical_mass_matrix(T, order=None):
     ndofs_v = 0
     C = T.create_subdivision_matrix('full')
     for level in range(mesh.nlevels):
+        if integration_region is None:
+            element_indices = None
+        else:
+            element_indices = T.get_sub_elements(integration_region)
+
         ndofs_u += T.nfuncs_level[level]
         ndofs_v += T.nfuncs_level[level]
 
         if mesh.nel_per_level[level] > 0:
-            M_local = local_mass_matrix(T, level, order)
+            M_local = local_mass_matrix(T, level, order, element_indices= element_indices)
 
             dofs_u = range(ndofs_u)
             dofs_v = range(ndofs_v)
@@ -30,7 +35,7 @@ def hierarchical_mass_matrix(T, order=None):
     return M
 
 
-def hierarchical_stiffness_matrix(T, order=None):
+def hierarchical_stiffness_matrix(T, order=None, integration_region = None):
     mesh = T.mesh
 
     n = T.nfuncs
@@ -40,11 +45,15 @@ def hierarchical_stiffness_matrix(T, order=None):
     ndofs_v = 0
     C = T.create_subdivision_matrix('full')
     for level in range(mesh.nlevels):
+        if integration_region is None:
+            element_indices = None
+        else:
+            element_indices = T.get_sub_elements(integration_region)
         ndofs_u += T.nfuncs_level[level]
         ndofs_v += T.nfuncs_level[level]
 
         if mesh.nel_per_level[level] > 0:
-            M_local = local_stiffness_matrix(T, level, order)
+            M_local = local_stiffness_matrix(T, level, order, element_indices=element_indices)
 
             dofs_u = range(ndofs_u)
             dofs_v = range(ndofs_v)

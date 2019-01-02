@@ -50,6 +50,19 @@ class CartesianMesh(Mesh):
         ])
         return CartesianMesh(refined_knots, self.dim)
 
+    def get_sub_elements(self, box):
+        """
+        Returns the indices of the cells that are contained in the region delimited by `box`.
+        :param box:
+        :return:
+        """
+
+        indices = []
+        for i, element in enumerate(self.cells):
+            condition = (element[:, 0] >= box[:, 0]) & (element[:, 1] <= box[:, 1])
+            if np.all(condition):
+                indices.append(i)
+        return indices
 
 if __name__ == '__main__':
     knots = [
