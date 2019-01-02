@@ -29,6 +29,7 @@ def hierarchical_mass_matrix(T, order=None):
 
     return M
 
+
 def hierarchical_stiffness_matrix(T, order=None):
     mesh = T.mesh
 
@@ -53,6 +54,7 @@ def hierarchical_stiffness_matrix(T, order=None):
 
     return M
 
+
 def translate_points(points, cell, weights):
     """
     Translates the gauss-quadrature points to the cell
@@ -76,8 +78,18 @@ def translate_points(points, cell, weights):
     return points, weights, area_cell
 
 
-def local_mass_matrix(T, level, order=None):
-    active_cells = T.mesh.meshes[level].cells[T.mesh.aelem_level[level]]
+def local_mass_matrix(T, level, order=None, element_indices=None):
+    """
+    Computes the mass matrix on a given level
+    :param T: HierarchicalSpace object
+    :param level: hierarchical level
+    :param order: integration order
+    :param element_indices: elements to integrate over. If None, all elements on this level will be integrated over.
+    :return:
+    """
+    if element_indices is None:
+        element_indices = np.intersect1d(range(T.mesh.meshes[level].nelems), T.mesh.aelem_level[level])
+    active_cells = T.mesh.meshes[level].cells[element_indices]
 
     ndofs_u = T.spaces[level].nfuncs
     ndofs_v = T.spaces[level].nfuncs
@@ -88,6 +100,7 @@ def local_mass_matrix(T, level, order=None):
         order = T.spaces[level].degrees[0] + 1
 
     points, weights = np.polynomial.legendre.leggauss(order)
+
     for cell in tqdm(active_cells, desc=f"level = {level}"):
         qp, qw, area = translate_points(points, cell, weights)
         dim = qp.shape[1]
@@ -105,8 +118,11 @@ def local_mass_matrix(T, level, order=None):
 
     return M
 
-def local_stiffness_matrix(T, level, order=None):
-    active_cells = T.mesh.meshes[level].cells[T.mesh.aelem_level[level]]
+
+def local_stiffness_matrix(T, level, order=None, element_indices=None):
+    if element_indices is None:
+        element_indices = np.intersect1d(range(T.mesh.meshes[level].nelems), T.mesh.aelem_level[level])
+    active_cells = T.mesh.meshes[level].cells[element_indices]
 
     ndofs_u = T.spaces[level].nfuncs
     ndofs_v = T.spaces[level].nfuncs
