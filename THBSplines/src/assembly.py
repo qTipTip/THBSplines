@@ -18,7 +18,7 @@ def hierarchical_mass_matrix(T, order=None, integration_region=None):
         if integration_region is None:
             element_indices = None
         else:
-            element_indices = T.get_sub_elements(integration_region)
+            element_indices = T.refine_in_rectangle(integration_region, level)
 
         ndofs_u += T.nfuncs_level[level]
         ndofs_v += T.nfuncs_level[level]
@@ -48,7 +48,7 @@ def hierarchical_stiffness_matrix(T, order=None, integration_region = None):
         if integration_region is None:
             element_indices = None
         else:
-            element_indices = T.get_sub_elements(integration_region)
+            element_indices = T.refine_in_rectangle(integration_region, level)
         ndofs_u += T.nfuncs_level[level]
         ndofs_v += T.nfuncs_level[level]
 
@@ -97,9 +97,9 @@ def local_mass_matrix(T, level, order=None, element_indices=None):
     :return:
     """
     if element_indices is None:
-        element_indices = np.intersect1d(range(T.mesh.meshes[level].nelems), T.mesh.aelem_level[level])
-    active_cells = T.mesh.meshes[level].cells[element_indices]
-
+        element_indices = range(T.mesh.meshes[level].nelems)
+    active_cells_i = np.intersect1d(T.mesh.aelem_level[level], element_indices)
+    active_cells = T.mesh.meshes[level].cells[active_cells_i]
     ndofs_u = T.spaces[level].nfuncs
     ndofs_v = T.spaces[level].nfuncs
 
@@ -130,9 +130,9 @@ def local_mass_matrix(T, level, order=None, element_indices=None):
 
 def local_stiffness_matrix(T, level, order=None, element_indices=None):
     if element_indices is None:
-        element_indices = np.intersect1d(range(T.mesh.meshes[level].nelems), T.mesh.aelem_level[level])
-    active_cells = T.mesh.meshes[level].cells[element_indices]
-
+        element_indices = range(T.mesh.meshes[level].nelems)
+    active_cells_i = np.intersect1d(T.mesh.aelem_level[level], element_indices)
+    active_cells = T.mesh.meshes[level].cells[active_cells_i]
     ndofs_u = T.spaces[level].nfuncs
     ndofs_v = T.spaces[level].nfuncs
 
