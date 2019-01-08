@@ -151,6 +151,7 @@ def test_invariant_refinement():
 
     # symmetry
     np.testing.assert_allclose(m, m.T)
+
     # partition of unity
     np.testing.assert_allclose(np.sum(m, axis=(0, 1)), np.ones(m.shape[1]))
 

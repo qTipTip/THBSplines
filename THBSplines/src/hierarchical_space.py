@@ -32,10 +32,12 @@ class HierarchicalSpace(Space):
         self.nfuncs_level = {0: self.spaces[0].nfuncs}
         self.nfuncs = self.nfuncs_level[0]
         self.projections = []
+        self.projections_onedim = []
         self.afunc = np.array([], np.int)
         self.dfunc = np.array([], np.int)
         self.truncated = True
         self.degrees = degrees
+        self.dim = dim
 
     def refine(self, marked_functions: dict, new_cells: dict) -> np.ndarray:
         """
@@ -53,10 +55,11 @@ class HierarchicalSpace(Space):
 
     def add_level(self):
         if len(self.spaces) == self.mesh.nlevels - 1:
-            refined_space, projector = self.spaces[self.mesh.nlevels - 2].refine()
+            refined_space, projector, projector_onedim = self.spaces[self.mesh.nlevels - 2].refine()
 
             self.spaces.append(refined_space)
             self.projections.append(projector)
+            self.projections_onedim.append(projector_onedim)
             self.nlevels += 1
             self.afunc_level[self.mesh.nlevels - 1] = np.array([], dtype=np.int)
             self.dfunc_level[self.mesh.nlevels - 1] = np.array([], dtype=np.int)
@@ -64,12 +67,47 @@ class HierarchicalSpace(Space):
         else:
             raise ValueError('Non-compatible mesh and space levels')
 
-    def get_basis_conversion_matrix(self, level):
+    def get_basis_conversion_matrix(self, level, coarse_indices = None):
+        """
+        :param level:
+        :param coarse_indices: indices of the coarse active functions.
+        :return:
+        """
+        if coarse_indices is None:
+            c = self.projections[level]
+        else:
 
-        c = self.projections[level]
+            prod = np.prod(self.spaces[level+1].degrees + 1)
+            rows = np.zeros(prod * len(coarse_indices))
+
+            columns = np.zeros_like(rows)
+            values = np.zeros_like(rows)
+
+            ncounter = 0
+            sub_coarse =  np.unravel_index(coarse_indices, self.spaces[level].nfuncs_onedim)
+            for i in range(len(coarse_indices)):
+                C = 1
+                for dim in range(self.dim):
+                    C = sp.kron(self.projections_onedim[level][dim][sub_coarse[dim][i], :], C)
+                ir, ic, iv = sp.find(C)
+                rows[ncounter : len(ir) + ncounter] = ir
+                columns[ncounter : len(ir) + ncounter] = i
+                values[ncounter : len(ir) + ncounter] = iv
+
+                ncounter += len(ir)
+
+            rows = rows[:ncounter]
+            columns = columns[:ncounter]
+            values = values[:ncounter]
+
+            c = sp.coo_matrix((values, (rows, columns)), shape=(self.spaces[level+1].nfuncs, self.spaces[level].nfuncs)).tolil()
+            #f self.truncated:
+            #    i = np.union1d(self.afunc_level[level], self.dfunc_level[level])
+            #    c[i, :] = 0
+            #    return c
+
         if self.truncated:
-            i = np.union1d(self.afunc_level[level + 1], self.dfunc_level[level + 1])
-
+            i = np.union1d(self.afunc_level[level+1], self.dfunc_level[level+1])
             c[i, :] = 0
         return c
 
@@ -176,9 +214,9 @@ class HierarchicalSpace(Space):
                 I_col_idx = list(range(self.nfuncs_level[level]))
 
                 data = np.ones(len(I_col_idx))
-                I = sp.coo_matrix((data, (I_row_idx, I_col_idx)))
-                aux = sp.lil_matrix(self.get_basis_conversion_matrix(level - 1))[:, func_on_deact_elements]
-
+                I = sp.coo_matrix((data, (I_row_idx, I_col_idx)), shape=(self.spaces[level].nfuncs, self.nfuncs_level[level]))
+                aux = self.get_basis_conversion_matrix(level - 1, coarse_indices=func_on_deact_elements)
+                print(sp.find(aux))
                 func_on_active_elements = self.spaces[level].get_basis_functions(mesh.aelem_level[level])
                 func_on_deact_elements = self.spaces[level].get_basis_functions(mesh.delem_level[level])
                 func_on_deact_elements = np.union1d(func_on_deact_elements, func_on_active_elements)
@@ -188,6 +226,7 @@ class HierarchicalSpace(Space):
             for level in range(1, self.nlevels):
                 I = sp.identity(self.spaces[level].nfuncs, format='lil')
                 aux = self.get_basis_conversion_matrix(level - 1)
+                print(sp.find(aux))
                 C[level] = sp.hstack([aux @ C[level - 1], I[:, self.afunc_level[level]]])
             return C
 

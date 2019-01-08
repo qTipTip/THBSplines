@@ -18,7 +18,7 @@ def test_refine():
         [[1, 2], [1, 2]]
     ]))
 
-    T1, proj = T.refine()
+    T1, proj, _ = T.refine()
     np.testing.assert_allclose(T1.mesh.cells, np.array([
         [[0, 0.5], [0, 0.5]],
         [[0.5, 1], [0, 0.5]],

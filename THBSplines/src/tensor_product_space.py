@@ -20,6 +20,7 @@ class TensorProductSpace(Space):
 
         self.construct_basis()
         self.nfuncs = len(self.basis)
+        self.nfuncs_onedim = [len(k) - d - 1 for k, d in zip(self.knots, self.degrees)]
         self.cell_area = self.mesh.cell_area
 
     def cell_to_basis(self, cell_indices: Union[np.ndarray, List[int]]) -> np.ndarray:
@@ -84,10 +85,10 @@ class TensorProductSpace(Space):
         coarse_knots = self.knots
         fine_knots = [insert_midpoints(knot_vector, degree) for knot_vector, degree in zip(self.knots, self.degrees)]
 
-        projection = self.compute_projection_matrix(coarse_knots, fine_knots, self.degrees)
+        projection, projection_onedim = self.compute_projection_matrix(coarse_knots, fine_knots, self.degrees)
         fine_space = TensorProductSpace(fine_knots, self.degrees, self.dim)
 
-        return fine_space, projection
+        return fine_space, projection, projection_onedim
 
     @staticmethod
     def compute_projection_matrix(coarse_knots, fine_knots, degrees):
@@ -98,7 +99,6 @@ class TensorProductSpace(Space):
             m = len(fine) - (degree + 1)
             n = len(coarse) - (degree + 1)
 
-            a = np.zeros(shape=(m, n))
             a = sp.lil_matrix((m, n), dtype=np.float64)
             fine = np.array(fine, dtype=np.float64)
             coarse = np.array(coarse, dtype=np.float64)
@@ -115,7 +115,7 @@ class TensorProductSpace(Space):
         a = matrices[0]
         for matrix in matrices[1:]:
             a = sp.kron(a, matrix, format='lil')
-        return a
+        return a, matrices
 
     def get_basis_functions(self, cell_list: np.ndarray) -> np.ndarray:
         """
