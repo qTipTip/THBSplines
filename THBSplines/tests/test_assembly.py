@@ -156,14 +156,10 @@ def test_invariant_refinement():
     # partition of unity
     np.testing.assert_allclose(np.sum(m, axis=(0, 1)), np.ones(m.shape[1]))
 
-    cells[1] = [0, 1, 3, 4]
+    cells[1] = [0, 1, 2, 3]
     t = refine(t, cells)
 
     m = hierarchical_mass_matrix(t).toarray()
-    import matplotlib.pyplot as plt
-
-    plt.spy(m)
-    plt.show()
     # symmetry
     np.testing.assert_allclose(m, m.T)
     # partition of unity

@@ -86,6 +86,10 @@ class HierarchicalSpace(Space):
 
             ncounter = 0
             sub_coarse = np.unravel_index(coarse_indices, self.spaces[level].nfuncs_onedim)
+            # TODO: Ugly hack!!!
+            # unravel_index gives basis functions in the opposite order from my implementation.
+            if self.dim == 2:
+                sub_coarse = [sub_coarse[1], sub_coarse[0]]
             for i in range(len(coarse_indices)):
                 C = 1
                 for dim in range(self.dim):
