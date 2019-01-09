@@ -164,7 +164,7 @@ class HierarchicalSpace(Space):
 
     def get_children(self, level, marked_functions_at_level):
         children = np.array([], dtype=np.int)
-        projection = sp.lil_matrix(self.projections[level])
+        projection = self.compute_full_projection_matrix(level)
         for func_idx in marked_functions_at_level:
             c = np.flatnonzero(projection[:, func_idx].toarray())
             children = np.union1d(children, c)
