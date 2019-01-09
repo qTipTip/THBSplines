@@ -92,10 +92,10 @@ class TensorProductSpace(Space):
         coarse_knots = self.knots
         fine_knots = [insert_midpoints(knot_vector, degree) for knot_vector, degree in zip(self.knots, self.degrees)]
 
-        projection, projection_onedim = self.compute_projection_matrix(coarse_knots, fine_knots, self.degrees)
+        projection_onedim = self.compute_projection_matrix(coarse_knots, fine_knots, self.degrees)
         fine_space = TensorProductSpace(fine_knots, self.degrees, self.dim)
 
-        return fine_space, projection, projection_onedim
+        return fine_space, projection_onedim
 
     @staticmethod
     def compute_projection_matrix(coarse_knots, fine_knots, degrees):
@@ -119,10 +119,8 @@ class TensorProductSpace(Space):
                     b = np.append((1 - omega) * b, 0) + np.insert((omega * b), 0, 0)
                 a[i, mu - degree:mu + 1] = b
             matrices.append(a[degree + 1:-degree - 1, degree + 1:-degree - 1])
-        a = matrices[0]
-        for matrix in matrices[1:]:
-            a = sp.kron(a, matrix, format='lil')
-        return a, matrices
+
+        return matrices
 
     def get_basis_functions(self, cell_list: np.ndarray) -> np.ndarray:
         """
@@ -237,10 +235,10 @@ class TensorProductSpace2D(TensorProductSpace):
         coarse_knots = self.knots
         fine_knots = [insert_midpoints(knot_vector, degree) for knot_vector, degree in zip(self.knots, self.degrees)]
 
-        projection, projection_onedim = self.compute_projection_matrix(coarse_knots, fine_knots, self.degrees)
+        projection_onedim = self.compute_projection_matrix(coarse_knots, fine_knots, self.degrees)
         fine_space = TensorProductSpace2D(fine_knots, self.degrees, self.dim)
 
-        return fine_space, projection, projection_onedim
+        return fine_space, projection_onedim
 
     @lru_cache()
     def construct_B_spline(self, i):

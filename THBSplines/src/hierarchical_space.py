@@ -30,7 +30,6 @@ class HierarchicalSpace(Space):
         self.dfunc_level = {0: np.array([], dtype=np.int)}  # deactivated functions on level
         self.nfuncs_level = {0: self.spaces[0].nfuncs}
         self.nfuncs = self.nfuncs_level[0]
-        self.projections = []
         self.projections_onedim = []
         self.afunc = np.array([], np.int)
         self.dfunc = np.array([], np.int)
@@ -54,10 +53,9 @@ class HierarchicalSpace(Space):
 
     def add_level(self):
         if len(self.spaces) == self.mesh.nlevels - 1:
-            refined_space, projector, projector_onedim = self.spaces[self.mesh.nlevels - 2].refine()
+            refined_space, projector_onedim = self.spaces[self.mesh.nlevels - 2].refine()
 
             self.spaces.append(refined_space)
-            self.projections.append(projector)
             self.projections_onedim.append(projector_onedim)
             self.nlevels += 1
             self.afunc_level[self.mesh.nlevels - 1] = np.array([], dtype=np.int)
