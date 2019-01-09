@@ -13,7 +13,7 @@ def hierarchical_mass_matrix(T, order=None, integration_region=None):
 
     ndofs_u = 0
     ndofs_v = 0
-    C = T.create_subdivision_matrix('full')
+    C = T.create_subdivision_matrix('reduced')
     for level in range(mesh.nlevels):
         if integration_region is None:
             element_indices = None

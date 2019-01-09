@@ -62,4 +62,5 @@ for refinement_level in range(NUMBER_OF_REFINEMENTS):
         top -= 0.1 / 2 ** (refinement_level - 1)
 
     M = thb.hierarchical_mass_matrix(T, order=order, integration_region=DOMAIN)
+    print('Hello', 1 - M.nnz / M.size)
     #A = thb.hierarchical_stiffness_matrix(T, order=order - 1, integration_region=DOMAIN)

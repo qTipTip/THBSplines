@@ -77,8 +77,8 @@ class HierarchicalSpace(Space):
             c = self.projections[level]
         else:
 
-            prod = np.prod(self.spaces[level+1].degrees + 1)
-            rows = np.zeros(prod * len(coarse_indices))
+            prod = np.prod(self.spaces[level+1].degrees + 2) * len(coarse_indices) # allocate space for data
+            rows = np.zeros(prod)
 
             columns = np.zeros_like(rows)
             values = np.zeros_like(rows)
@@ -86,9 +86,7 @@ class HierarchicalSpace(Space):
             ncounter = 0
             sub_coarse =  np.unravel_index(coarse_indices, self.spaces[level].nfuncs_onedim)
             for i in range(len(coarse_indices)):
-                C = 1
-                for dim in range(self.dim):
-                    C = sp.kron(self.projections_onedim[level][dim][sub_coarse[dim][i], :], C)
+                C = self.projections[level][:, i]
                 ir, ic, iv = sp.find(C)
                 rows[ncounter : len(ir) + ncounter] = ir
                 columns[ncounter : len(ir) + ncounter] = i
@@ -101,10 +99,6 @@ class HierarchicalSpace(Space):
             values = values[:ncounter]
 
             c = sp.coo_matrix((values, (rows, columns)), shape=(self.spaces[level+1].nfuncs, self.spaces[level].nfuncs)).tolil()
-            #f self.truncated:
-            #    i = np.union1d(self.afunc_level[level], self.dfunc_level[level])
-            #    c[i, :] = 0
-            #    return c
 
         if self.truncated:
             i = np.union1d(self.afunc_level[level+1], self.dfunc_level[level+1])
@@ -205,10 +199,10 @@ class HierarchicalSpace(Space):
         C[0] = C[0][:, self.afunc_level[0]]
 
         if mode == 'reduced':
+            print('Reduced')
             func_on_active_elements = self.spaces[0].get_basis_functions(mesh.aelem_level[0])
             func_on_deact_elements = self.spaces[0].get_basis_functions(mesh.delem_level[0])
             func_on_deact_elements = np.union1d(func_on_deact_elements, func_on_active_elements)
-
             for level in range(1, self.nlevels):
                 I_row_idx = self.afunc_level[level]
                 I_col_idx = list(range(self.nfuncs_level[level]))
@@ -216,17 +210,18 @@ class HierarchicalSpace(Space):
                 data = np.ones(len(I_col_idx))
                 I = sp.coo_matrix((data, (I_row_idx, I_col_idx)), shape=(self.spaces[level].nfuncs, self.nfuncs_level[level]))
                 aux = self.get_basis_conversion_matrix(level - 1, coarse_indices=func_on_deact_elements)
-                print(sp.find(aux))
+                print(aux)
                 func_on_active_elements = self.spaces[level].get_basis_functions(mesh.aelem_level[level])
                 func_on_deact_elements = self.spaces[level].get_basis_functions(mesh.delem_level[level])
                 func_on_deact_elements = np.union1d(func_on_deact_elements, func_on_active_elements)
                 C[level] = sp.hstack([aux @ C[level - 1], I])
             return C
         else:
+            print('Full')
             for level in range(1, self.nlevels):
                 I = sp.identity(self.spaces[level].nfuncs, format='lil')
                 aux = self.get_basis_conversion_matrix(level - 1)
-                print(sp.find(aux))
+                print(aux)
                 C[level] = sp.hstack([aux @ C[level - 1], I[:, self.afunc_level[level]]])
             return C
 
