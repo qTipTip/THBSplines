@@ -7,6 +7,7 @@ from THBSplines.lib.BSpline import TensorProductBSpline
 from THBSplines.src.abstract_space import Space
 from THBSplines.src.b_spline import augment_knots, find_knot_index
 from THBSplines.src.cartesian_mesh import CartesianMesh
+from memory_profiler import profile
 
 
 class TensorProductSpace(Space):
@@ -225,6 +226,7 @@ class TensorProductSpace2D(TensorProductSpace):
         self.nfuncs_onedim = [n, m]
         self.basis = [0]*(n * m)
 
+    @profile
     def refine(self) -> Tuple["TensorProductSpace2D", np.ndarray, List]:
         """
         Refine the space by dyadically inserting midpoints in the knot vectors, and computing the knot-insertion

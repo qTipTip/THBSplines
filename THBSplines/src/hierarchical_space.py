@@ -75,7 +75,7 @@ class HierarchicalSpace(Space):
         print('Space dimensions', self.nfuncs_level[level], self.spaces[level].nfuncs,
               self.spaces[level].nfuncs_onedim)
         if coarse_indices is None:
-            c = self.projections[level]
+            c = self.compute_full_projection_matrix(level)
         else:
 
             prod = np.prod(self.spaces[level + 1].degrees + 2) * len(coarse_indices)  # allocate space for data
@@ -110,6 +110,13 @@ class HierarchicalSpace(Space):
         if self.truncated:
             i = np.union1d(self.afunc_level[level + 1], self.dfunc_level[level + 1])
             c[i, :] = 0
+        return c
+
+    def compute_full_projection_matrix(self, level):
+        c = 1
+        for dim in range(self.dim):
+            c = sp.kron(self.projections_onedim[level][dim], c)
+        c = c.tolil()
         return c
 
     def update_active_functions(self, marked_entities: dict, new_cells: dict):
