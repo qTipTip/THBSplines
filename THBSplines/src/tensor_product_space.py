@@ -1,3 +1,4 @@
+from functools import lru_cache
 from typing import Union, List, Tuple
 
 import numpy as np
@@ -6,6 +7,7 @@ from THBSplines.lib.BSpline import TensorProductBSpline
 from THBSplines.src.abstract_space import Space
 from THBSplines.src.b_spline import augment_knots, find_knot_index
 from THBSplines.src.cartesian_mesh import CartesianMesh
+from memory_profiler import profile
 
 
 class TensorProductSpace(Space):
@@ -60,7 +62,9 @@ class TensorProductSpace(Space):
         n = len(idx_start_perm)
 
         b_splines = []
+        b_splines_end_evals = []
         b_support = np.zeros((n, self.dim, 2))
+
         for i in range(n):
             new_knots = []
             end_evals = []
@@ -69,11 +73,14 @@ class TensorProductSpace(Space):
                 end_evals.append(idx_stop_perm[i, j] == len(self.knots[j]))
             new_knots = np.array(new_knots, dtype=np.float64)
             end_evals = np.array(end_evals, dtype=np.intc).ravel()
-            new_b_spline = TensorProductBSpline(degrees, new_knots, end_evals)
-            b_splines.append(new_b_spline)
+            # new_b_spline = TensorProductBSpline(degrees, new_knots, end_evals)
+            b_splines.append(new_knots)
             b_support[i] = [[new_knots[j][0], new_knots[j][-1]] for j in range(dim)]
+            b_splines_end_evals.append(end_evals)
         self.basis = np.array(b_splines)
         self.basis_supports = b_support
+        self.basis_end_evals = b_splines_end_evals
+        self.nfuncs = len(self.basis)
 
     def refine(self) -> Tuple["TensorProductSpace", np.ndarray]:
         """
@@ -158,7 +165,7 @@ class TensorProductSpace(Space):
         assert len(coefficients) == len(self.basis)
 
         def f(x):
-            return sum([c * b(x) for c, b in zip(coefficients, self.basis)])
+            return sum([c * self.construct_B_spline(i)(x) for i, c in enumerate(coefficients)])
 
         return f
 
@@ -172,6 +179,83 @@ class TensorProductSpace(Space):
                 self.basis_supports[:, :, 1] >= rectangle[:, 1])
         i = np.flatnonzero(np.all(condition, axis=1))
         return i
+
+    @lru_cache()
+    def construct_B_spline(self, i):
+        """
+        Return a Callable TensorProductBSpline
+        :param i:
+        :return:
+        """
+
+        return TensorProductBSpline(self.degrees, self.basis[i], self.basis_end_evals[i])
+
+
+class TensorProductSpace2D(TensorProductSpace):
+
+
+    def construct_basis(self):
+
+        knots_u = self.knots[0]
+        knots_v = self.knots[1]
+        deg_u = self.degrees[0]
+        deg_v = self.degrees[1]
+
+        lenu = len(knots_u)
+        n = lenu - deg_u - 1
+        lenv = len(knots_v)
+        m = lenv - deg_v - 1
+
+        b_splines_end_evals = np.zeros((n * m, 2), dtype=np.intc)
+        b_support = np.zeros((n * m, self.dim, 2))
+
+        index = 0
+        for j in range(m):
+            for i in range(n):
+                b_support[index] = [[knots_u[i], knots_u[i + deg_u + 1]], [knots_v[j], knots_v[j + deg_v + 1]]]
+                offset_u = (i + deg_u + 2)
+                offset_v = (j + deg_v + 2)
+                b_splines_end_evals[index] = [lenu == offset_u, lenv == offset_v]
+
+                index += 1
+        self.basis_supports = b_support
+        self.basis_end_evals = b_splines_end_evals
+        self.nfuncs = n * m
+        self.dim_u = n
+        self.dim_v = m
+        self.nfuncs_onedim = [n, m]
+        self.basis = [0]*(n * m)
+
+    @profile
+    def refine(self) -> Tuple["TensorProductSpace2D", np.ndarray]:
+        """
+        Refine the space by dyadically inserting midpoints in the knot vectors, and computing the knot-insertion
+        matrix (the projection matrix form coarse to fine space).
+        :return:
+        """
+
+        coarse_knots = self.knots
+        fine_knots = [insert_midpoints(knot_vector, degree) for knot_vector, degree in zip(self.knots, self.degrees)]
+
+        projection_onedim = self.compute_projection_matrix(coarse_knots, fine_knots, self.degrees)
+        fine_space = TensorProductSpace2D(fine_knots, self.degrees, self.dim)
+
+        return fine_space, projection_onedim
+
+    @lru_cache()
+    def construct_B_spline(self, i):
+        """
+        Return a Callable TensorProductBSpline
+        :param i:
+        :return:
+        """
+
+        ind_v = i // self.dim_u
+        ind_u = i % self.dim_u
+
+        knots = np.array([self.knots[0][ind_u : ind_u + self.degrees[0] + 2],
+            self.knots[1][ind_v : ind_v + self.degrees[1] + 2]], dtype=np.float64)
+        return TensorProductBSpline(self.degrees, knots, self.basis_end_evals[i])
 
 
 def insert_midpoints(knots, p):
@@ -190,6 +274,7 @@ def insert_midpoints(knots, p):
     return np.sort(np.concatenate((knots, midpoints)))
 
 
+
 if __name__ == '__main__':
     knots = [
         [0, 0, 0, 1, 2, 3, 4, 5, 5, 5],
@@ -198,22 +283,9 @@ if __name__ == '__main__':
     d = [2, 2]
     dim = 2
 
-    T = TensorProductSpace(knots, d, dim)
+    T = TensorProductSpace2D(knots, d, dim)
 
-    N = 30
-    x = np.linspace(0, 5, N)
-    y = np.linspace(0, 5, N)
-    X, Y = np.meshgrid(x, y)
-    for b in T.basis:
-        z = np.zeros((N, N))
-        for i in range(N):
-            for j in range(N):
-                z[i, j] = b(np.array([x[i], y[j]]))
+    for i in range(T.nfuncs):
+        T.construct_B_spline(i)
 
-        import matplotlib.pyplot as plt
-        from mpl_toolkits.mplot3d import Axes3D
-
-        fig = plt.figure()
-        axs = Axes3D(fig)
-        axs.plot_surface(X, Y, z)
-        plt.show()
+    assert T.nfuncs == 49

@@ -115,10 +115,11 @@ def local_mass_matrix(T, level, order=None, element_indices=None):
         dim = qp.shape[1]
         active_basis_functions = T.spaces[level].get_functions_on_rectangle(cell)
         for glob_ind_i, i in enumerate(active_basis_functions):
-            bi = T.spaces[level].basis[i]
+            bi = T.spaces[level].construct_B_spline(i)
+            bi_values = bi(qp)
             for glob_ind_j, j in enumerate(active_basis_functions[glob_ind_i:]):
-                bj = T.spaces[level].basis[j]
-                bi_values, bj_values = bi(qp), bj(qp)
+                bj = T.spaces[level].construct_B_spline(j)
+                bj_values = bj(qp)
                 val = cintegrate(bi_values, bj_values, qw, area, dim)
                 M[i, j] += val
                 if i == j:
@@ -147,10 +148,11 @@ def local_stiffness_matrix(T, level, order=None, element_indices=None):
         dim = qp.shape[1]
         active_basis_functions = T.spaces[level].get_functions_on_rectangle(cell)
         for glob_ind_i, i in enumerate(active_basis_functions):
-            bi = T.spaces[level].basis[i]
+            bi = T.spaces[level].construct_B_spline(i)
+            bi_values = bi.grad(qp)
             for glob_ind_j, j in enumerate(active_basis_functions[glob_ind_i:]):
-                bj = T.spaces[level].basis[j]
-                bi_values, bj_values = bi.grad(qp), bj.grad(qp)
+                bj = T.spaces[level].construct_B_spline(j)
+                bj_values = bj.grad(qp)
                 val = cintegrate_grad(bi_values, bj_values, qw, area, dim)
                 M[i, j] += val
                 if i == j:
