@@ -61,6 +61,11 @@ for refinement_level in range(NUMBER_OF_REFINEMENTS):
         bot += 0.1 / 2 ** (refinement_level - 1)
         top -= 0.1 / 2 ** (refinement_level - 1)
 
-    M = thb.hierarchical_mass_matrix(T, order=order, integration_region=DOMAIN)
-    print('Hello', 1 - M.nnz / M.size)
+    M = thb.hierarchical_mass_matrix(T, order=order, integration_region=DOMAIN, mode='full')
+    MM = thb.hierarchical_mass_matrix(T, order=order, integration_region=DOMAIN, mode='reduced')
+
+    assert np.allclose(M.toarray(), MM.toarray())
+    import matplotlib.pyplot as plt
+    plt.spy(M, markersize=1)
+    plt.show()
     #A = thb.hierarchical_stiffness_matrix(T, order=order - 1, integration_region=DOMAIN)

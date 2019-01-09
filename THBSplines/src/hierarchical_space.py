@@ -72,11 +72,12 @@ class HierarchicalSpace(Space):
         :param coarse_indices: indices of the coarse active functions.
         :return:
         """
+        print('Space dimensions', self.nfuncs_level[level], self.spaces[level].nfuncs,
+              self.spaces[level].nfuncs_onedim)
         if coarse_indices is None:
             c = self.projections[level]
         else:
-            print('Space dimensions', self.nfuncs_level[level], self.spaces[level].nfuncs,
-                  self.spaces[level].nfuncs_onedim)
+
             prod = np.prod(self.spaces[level + 1].degrees + 2) * len(coarse_indices)  # allocate space for data
             rows = np.zeros(prod)
 
