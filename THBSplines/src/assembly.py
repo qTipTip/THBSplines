@@ -5,7 +5,7 @@ from THBSplines.lib.BSpline import integrate as cintegrate, integrate_grad as ci
 from tqdm import tqdm
 
 
-def hierarchical_mass_matrix(T, order=None, integration_region=None):
+def hierarchical_mass_matrix(T, order=None, integration_region=None, mode='reduced'):
     mesh = T.mesh
 
     n = T.nfuncs
@@ -13,7 +13,7 @@ def hierarchical_mass_matrix(T, order=None, integration_region=None):
 
     ndofs_u = 0
     ndofs_v = 0
-    C = T.create_subdivision_matrix('reduced')
+    C = T.create_subdivision_matrix(mode)
     for level in range(mesh.nlevels):
         if integration_region is None:
             element_indices = None
@@ -35,7 +35,7 @@ def hierarchical_mass_matrix(T, order=None, integration_region=None):
     return M
 
 
-def hierarchical_stiffness_matrix(T, order=None, integration_region = None):
+def hierarchical_stiffness_matrix(T, order=None, integration_region = None, mode='reduced'):
     mesh = T.mesh
 
     n = T.nfuncs
@@ -43,7 +43,7 @@ def hierarchical_stiffness_matrix(T, order=None, integration_region = None):
 
     ndofs_u = 0
     ndofs_v = 0
-    C = T.create_subdivision_matrix('reduced')
+    C = T.create_subdivision_matrix(mode)
     for level in range(mesh.nlevels):
         if integration_region is None:
             element_indices = None
