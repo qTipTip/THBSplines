@@ -199,7 +199,6 @@ class HierarchicalSpace(Space):
         C[0] = C[0][:, self.afunc_level[0]]
 
         if mode == 'reduced':
-            print('Reduced')
             func_on_active_elements = self.spaces[0].get_basis_functions(mesh.aelem_level[0])
             func_on_deact_elements = self.spaces[0].get_basis_functions(mesh.delem_level[0])
             func_on_deact_elements = np.union1d(func_on_deact_elements, func_on_active_elements)
@@ -210,18 +209,15 @@ class HierarchicalSpace(Space):
                 data = np.ones(len(I_col_idx))
                 I = sp.coo_matrix((data, (I_row_idx, I_col_idx)), shape=(self.spaces[level].nfuncs, self.nfuncs_level[level]))
                 aux = self.get_basis_conversion_matrix(level - 1, coarse_indices=func_on_deact_elements)
-                print(aux)
                 func_on_active_elements = self.spaces[level].get_basis_functions(mesh.aelem_level[level])
                 func_on_deact_elements = self.spaces[level].get_basis_functions(mesh.delem_level[level])
                 func_on_deact_elements = np.union1d(func_on_deact_elements, func_on_active_elements)
                 C[level] = sp.hstack([aux @ C[level - 1], I])
             return C
         else:
-            print('Full')
             for level in range(1, self.nlevels):
                 I = sp.identity(self.spaces[level].nfuncs, format='lil')
                 aux = self.get_basis_conversion_matrix(level - 1)
-                print(aux)
                 C[level] = sp.hstack([aux @ C[level - 1], I[:, self.afunc_level[level]]])
             return C
 
