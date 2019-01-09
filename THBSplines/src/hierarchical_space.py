@@ -3,7 +3,6 @@ from typing import Union, List
 
 import numpy as np
 import scipy.sparse as sp
-
 from THBSplines.src.abstract_space import Space
 from THBSplines.src.hierarchical_mesh import HierarchicalMesh
 from THBSplines.src.tensor_product_space import TensorProductSpace
@@ -67,7 +66,7 @@ class HierarchicalSpace(Space):
         else:
             raise ValueError('Non-compatible mesh and space levels')
 
-    def get_basis_conversion_matrix(self, level, coarse_indices = None):
+    def get_basis_conversion_matrix(self, level, coarse_indices=None):
         """
         :param level:
         :param coarse_indices: indices of the coarse active functions.
@@ -76,32 +75,35 @@ class HierarchicalSpace(Space):
         if coarse_indices is None:
             c = self.projections[level]
         else:
-
-            prod = np.prod(self.spaces[level+1].degrees + 2) * len(coarse_indices) # allocate space for data
+            print('Space dimensions', self.nfuncs_level[level], self.spaces[level].nfuncs,
+                  self.spaces[level].nfuncs_onedim)
+            prod = np.prod(self.spaces[level + 1].degrees + 2) * len(coarse_indices)  # allocate space for data
             rows = np.zeros(prod)
 
             columns = np.zeros_like(rows)
             values = np.zeros_like(rows)
 
             ncounter = 0
-            sub_coarse =  np.unravel_index(coarse_indices, self.spaces[level].nfuncs_onedim)
+            sub_coarse = np.unravel_index(coarse_indices, self.spaces[level].nfuncs_onedim)
             for i in range(len(coarse_indices)):
-                C = self.projections[level][:, i]
+                C = 1
+                for dim in range(self.dim):
+                    C = sp.kron(self.projections_onedim[level][dim][:, sub_coarse[dim][i]], C)
                 ir, ic, iv = sp.find(C)
-                rows[ncounter : len(ir) + ncounter] = ir
-                columns[ncounter : len(ir) + ncounter] = i
-                values[ncounter : len(ir) + ncounter] = iv
+                rows[ncounter: len(ir) + ncounter] = ir
+                columns[ncounter: len(ir) + ncounter] = i
+                values[ncounter: len(ir) + ncounter] = iv
 
                 ncounter += len(ir)
 
             rows = rows[:ncounter]
             columns = columns[:ncounter]
             values = values[:ncounter]
-
-            c = sp.coo_matrix((values, (rows, columns)), shape=(self.spaces[level+1].nfuncs, self.spaces[level].nfuncs)).tolil()
+            c = sp.coo_matrix((values, (rows, columns)),
+                              shape=(self.spaces[level + 1].nfuncs, self.spaces[level].nfuncs)).tolil()
 
         if self.truncated:
-            i = np.union1d(self.afunc_level[level+1], self.dfunc_level[level+1])
+            i = np.union1d(self.afunc_level[level + 1], self.dfunc_level[level + 1])
             c[i, :] = 0
         return c
 
@@ -207,7 +209,8 @@ class HierarchicalSpace(Space):
                 I_col_idx = list(range(self.nfuncs_level[level]))
 
                 data = np.ones(len(I_col_idx))
-                I = sp.coo_matrix((data, (I_row_idx, I_col_idx)), shape=(self.spaces[level].nfuncs, self.nfuncs_level[level]))
+                I = sp.coo_matrix((data, (I_row_idx, I_col_idx)),
+                                  shape=(self.spaces[level].nfuncs, self.nfuncs_level[level]))
                 aux = self.get_basis_conversion_matrix(level - 1, coarse_indices=func_on_deact_elements)
                 func_on_active_elements = self.spaces[level].get_basis_functions(mesh.aelem_level[level])
                 func_on_deact_elements = self.spaces[level].get_basis_functions(mesh.delem_level[level])
@@ -282,13 +285,13 @@ class HierarchicalSpace(Space):
                 n = len(np.unique(col))
                 if n > max_degree:
                     color = 'black'
-                    fill=True
+                    fill = True
                     hatch = '//'
                     dotext = True
                 else:
                     color = 'black'
                     hatch = None
-                    fill=False
+                    fill = False
                     dotext = False
 
                 e = mesh.cells[cell]
@@ -297,7 +300,8 @@ class HierarchicalSpace(Space):
                 mp1 = e[0, 0] + w / 2
                 mp2 = e[1, 0] + h / 2
 
-                axs.add_patch(plp.Rectangle((e[0, 0], e[1, 0]), w, h, fill=fill, color=color, alpha=0.2, hatch=None, linewidth=0.2))
+                axs.add_patch(plp.Rectangle((e[0, 0], e[1, 0]), w, h, fill=fill, color=color, alpha=0.2, hatch=None,
+                                            linewidth=0.2))
                 if text:
                     if not dotext:
                         continue
@@ -371,6 +375,7 @@ class HierarchicalSpace(Space):
             plt.savefig(filename)
         else:
             plt.show()
+
 
 if __name__ == '__main__':
     knots = [

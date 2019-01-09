@@ -82,7 +82,8 @@ class TensorProductSpace(Space):
         self.basis_end_evals = b_splines_end_evals
         self.nfuncs = len(self.basis)
 
-    def refine(self) -> Tuple["TensorProductSpace", np.ndarray]:
+    @profile
+    def refine(self) -> Tuple["TensorProductSpace", np.ndarray, List]:
         """
         Refine the space by dyadically inserting midpoints in the knot vectors, and computing the knot-insertion
         matrix (the projection matrix form coarse to fine space).
