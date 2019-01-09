@@ -55,7 +55,7 @@ def test_projection_matrix_linear():
     cells = {0: [1]}
     T = refine(T, cells)
 
-    C = T.projections[0]
+    C = T.compute_full_projection_matrix(0)
 
     assert C.shape == (7, 4)
     np.testing.assert_allclose(C.toarray(), np.array([
@@ -79,7 +79,7 @@ def test_projection_matrix_bilinear():
     T = HierarchicalSpace(knots, d, dim)
     cells = {0: [1]}
     T = refine(T, cells)
-    C = T.projections[0]
+    C = T.compute_full_projection_matrix(0)
     assert C.shape == (49, 16)
 
 
