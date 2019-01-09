@@ -5,7 +5,7 @@ import numpy as np
 import scipy.sparse as sp
 from THBSplines.src.abstract_space import Space
 from THBSplines.src.hierarchical_mesh import HierarchicalMesh
-from THBSplines.src.tensor_product_space import TensorProductSpace
+from THBSplines.src.tensor_product_space import TensorProductSpace, TensorProductSpace2D
 
 
 class HierarchicalSpace(Space):
@@ -24,7 +24,7 @@ class HierarchicalSpace(Space):
         :param dim:
         """
         self.nlevels = 1
-        self.spaces = [TensorProductSpace(knots, degrees, dim)]
+        self.spaces = [TensorProductSpace(knots, degrees, dim)] if dim != 2 else [TensorProductSpace2D(knots, degrees, dim)]
         self.mesh = HierarchicalMesh(knots, dim)
         self.afunc_level = {0: np.array((range(self.spaces[0].nfuncs)), dtype=np.int)}  # active functions on level
         self.dfunc_level = {0: np.array([], dtype=np.int)}  # deactivated functions on level

@@ -228,7 +228,7 @@ class TensorProductSpace2D(TensorProductSpace):
         self.basis = [0]*(n * m)
 
     @profile
-    def refine(self) -> Tuple["TensorProductSpace2D", np.ndarray]:
+    def refine(self) -> Tuple["TensorProductSpace2D", np.ndarray, List]:
         """
         Refine the space by dyadically inserting midpoints in the knot vectors, and computing the knot-insertion
         matrix (the projection matrix form coarse to fine space).
@@ -238,10 +238,10 @@ class TensorProductSpace2D(TensorProductSpace):
         coarse_knots = self.knots
         fine_knots = [insert_midpoints(knot_vector, degree) for knot_vector, degree in zip(self.knots, self.degrees)]
 
-        projection_onedim = self.compute_projection_matrix(coarse_knots, fine_knots, self.degrees)
+        projection, projection_onedim = self.compute_projection_matrix(coarse_knots, fine_knots, self.degrees)
         fine_space = TensorProductSpace2D(fine_knots, self.degrees, self.dim)
 
-        return fine_space, projection_onedim
+        return fine_space, projection, projection_onedim
 
     @lru_cache()
     def construct_B_spline(self, i):
