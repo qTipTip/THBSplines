@@ -1,4 +1,5 @@
 # THBSplines
+
 ## Truncated Hierarchical B-Splines in Python
 
 This repository contains a dimension-independent Python-implementation of truncated hierarchical B-splines, and methods for the assembly of stiffness
@@ -47,3 +48,19 @@ plt.show()
 ```
 
 ![](THBSplines/images/mass_matrix.png)
+
+## Installation
+
+Simply clone or download the repository and execute
+
+```shell
+pip install .
+```
+
+from the root directory. Verify the installation by calling 
+
+```shell
+pytest
+```
+from the root directory. 
+
