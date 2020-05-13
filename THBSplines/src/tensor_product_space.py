@@ -12,6 +12,13 @@ from THBSplines.src.cartesian_mesh import CartesianMesh
 class TensorProductSpace(Space):
 
     def __init__(self, knots, degrees, dim):
+        """
+        Initialize a new TensorProductSpace.
+
+        :param knots: a np.ndarray of knot vectors 
+        :param degrees: a np.ndarray of degrees corresponding to each parametric dimension
+        :param dim: the number of parametric directions
+        """
         self.knots = np.array(knots, dtype=np.float64)
         self.degrees = np.array(degrees, dtype=np.intc)
         self.dim = dim
@@ -25,6 +32,13 @@ class TensorProductSpace(Space):
         self.cell_area = self.mesh.cell_area
 
     def cell_to_basis(self, cell_indices: Union[np.ndarray, List[int]]) -> np.ndarray:
+        """
+        Returns the indices of basis-functions active on the corresponding
+        cells.
+
+        :param cell_indices: a list/array of indices
+        :return: a nested list of index-sets corresponding to active basis functions.
+        """
         basis_idx = []
         for cell_idx in cell_indices:
             cell = self.mesh.cells[cell_idx]
@@ -35,6 +49,13 @@ class TensorProductSpace(Space):
         return np.array(basis_idx)
 
     def basis_to_cell(self, basis_indices: Union[np.ndarray, List[int]]) -> np.ndarray:
+        """
+        Returns the indices of cells in the support of the passed basis
+        indices. The 'inverse' of cell_to_basis.
+
+        :param basis_indices: a list/array of indices
+        :return: a nested list of index-sets corresponding to cells in the support of the provided basis functions.
+        """
         cell_indices = []
         for basis_idx in basis_indices:
             basis_supp = self.basis_supports[basis_idx]
@@ -46,6 +67,10 @@ class TensorProductSpace(Space):
         return np.array(cell_indices)
 
     def construct_basis(self):
+        """
+        Initializes the tensor product space by creating all the BSplines and
+        setting the corresponding cell/support pointers.
+        """
         degrees = self.degrees
         dim = self.dim
         idx_start = np.array([
@@ -83,9 +108,11 @@ class TensorProductSpace(Space):
 
     def refine(self) -> Tuple["TensorProductSpace", np.ndarray, List]:
         """
-        Refine the space by dyadically inserting midpoints in the knot vectors, and computing the knot-insertion
-        matrix (the projection matrix form coarse to fine space).
-        :return:
+        Refine the space by dyadically inserting midpoints in the knot
+        vectors, and computing the knot-insertion matrix (the projection
+        matrix form coarse to fine space).
+
+        :return: the refined TensorProductSpace along with the projection matrix that connects this space with the refined space.
         """
 
         coarse_knots = self.knots
@@ -98,6 +125,16 @@ class TensorProductSpace(Space):
 
     @staticmethod
     def compute_projection_matrix(coarse_knots, fine_knots, degrees):
+        """
+        Computes the 1D projection matrix of the space corresponding to the
+        fine knots with respect to the coarse knots and the spline degree.
+
+        :param coarse_knots: list/array of coarse knot vectors, one for each parametric direction
+        :param fine_knots: list/array of fine knot vectors, one for each parametric direction
+        :param degrees: list of spline degrees, one for each parametri direction.
+
+        :return: a list of 1D projection matrices corresponding to each parametric dimension
+        """
         matrices = []
         for fine, coarse, degree in zip(fine_knots, coarse_knots, degrees):
             coarse = augment_knots(coarse, degree)
@@ -124,6 +161,7 @@ class TensorProductSpace(Space):
     def get_basis_functions(self, cell_list: np.ndarray) -> np.ndarray:
         """
         Returns the indices of basis functions supported over the given list of cells.
+
         :param cell_list: Numpy array containing the indices of cells.
         :return: numpy array containing the indices of basis functions.
         """
@@ -139,10 +177,12 @@ class TensorProductSpace(Space):
 
     def get_cells(self, basis_function_list: np.ndarray) -> Tuple[np.ndarray, dict]:
         """
-        Given a list of indices corresponding to basis functions, return the union of the support-cells,
-        and a dictionary mapping basis_function to cell index.
-        :param basis_function_list:
-        :return:
+        Given a list of indices corresponding to basis functions, return the
+        union of the support-cells, and a dictionary mapping basis_function
+        to cell index.
+
+        :param basis_function_list: A list/array of indices corresponding to basis functions
+        :return: the set of cells in the support of at least one basis function, and a dictionary mapping basis functions to their cell indices.
         """
 
         cells = np.array([], dtype=np.int)
@@ -158,6 +198,12 @@ class TensorProductSpace(Space):
         return cells, cells_map
 
     def construct_function(self, coefficients):
+        """
+        Constructs a linear combination of THB-splines, given coefficients.
+        
+        :param coefficients: an array of spline coefficients
+        :return: a callable spline-function
+        """
 
         assert len(coefficients) == len(self.basis)
 
@@ -168,9 +214,11 @@ class TensorProductSpace(Space):
 
     def get_functions_on_rectangle(self, rectangle):
         """
-        Returns the indices of the supports whose support contains the rectangle.
-        :param rectangle:
-        :return:
+        Returns the indices of the functions whose support contains the
+        rectangle.
+
+        :param rectangle: np.array containing rectangle endpoints
+        :return: function indices
         """
         condition = (self.basis_supports[:, :, 0] <= rectangle[:, 0]) & (
                 self.basis_supports[:, :, 1] >= rectangle[:, 1])
@@ -180,9 +228,11 @@ class TensorProductSpace(Space):
     @lru_cache()
     def construct_B_spline(self, i):
         """
-        Return a Callable TensorProductBSpline
-        :param i:
-        :return:
+        Return a Callable TensorProductBSpline. This is cached to avoid
+        reccreating BSplines.
+
+        :param i: index of basis function
+        :return: a callable TensorProductBSpline
         """
 
         return TensorProductBSpline(self.degrees, self.basis[i], self.basis_end_evals[i])
@@ -192,6 +242,9 @@ class TensorProductSpace2D(TensorProductSpace):
 
 
     def construct_basis(self):
+        """
+
+        """
 
         knots_u = self.knots[0]
         knots_v = self.knots[1]
@@ -225,9 +278,11 @@ class TensorProductSpace2D(TensorProductSpace):
 
     def refine(self) -> Tuple["TensorProductSpace2D", np.ndarray, List]:
         """
-        Refine the space by dyadically inserting midpoints in the knot vectors, and computing the knot-insertion
+        Refine the space by dyadically inserting midpoints in the knot
+        vectors, and computing the knot-insertion
         matrix (the projection matrix form coarse to fine space).
-        :return:
+        
+        :return: refined TensorProductSpace and a projection matrix
         """
 
         coarse_knots = self.knots
@@ -242,8 +297,9 @@ class TensorProductSpace2D(TensorProductSpace):
     def construct_B_spline(self, i):
         """
         Return a Callable TensorProductBSpline
-        :param i:
-        :return:
+
+        :param i: index of B-spline
+        :return: callable B-spline function
         """
 
         ind_v = i // self.dim_u
@@ -256,8 +312,9 @@ class TensorProductSpace2D(TensorProductSpace):
 
 def insert_midpoints(knots, p):
     """
-    Inserts midpoints in all interior knot intervals of a p+1 regular knot vector.
-    :param s:
+    Inserts midpoints in all interior knot intervals of a p+1 regular knot
+    vector.
+
     :param knots: p + 1 regular knot vector to be refined
     :param p: spline degree
     :return: refined_knots

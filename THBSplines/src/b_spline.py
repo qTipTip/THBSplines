@@ -7,9 +7,12 @@ class BSpline(object):
 
     def __init__(self, degrees, knots):
         """
-        A list of d = (d_1, ..., d_n) polynomial degrees, and a list of corresponding knots.
+        A list of d = (d_1, ..., d_n) polynomial degrees, and a list of
+        corresponding knots.
+        
         :param degrees: np.array of degrees
-        :param knots: list of knot-vectors where knot vector knots[i] has length d_i + 2.
+        :param knots: list of knot-vectors where knot vector knots[i] has
+        length d_i + 2.
         """
         self.degrees = degrees
         self.knots = knots
@@ -24,6 +27,7 @@ class BSpline(object):
     def __call__(self, x):
         """
         Evaluates the BSpline at the point x.
+
         :param x: np.ndarray
         :return: B(x_1, ..., x_d)
         """
@@ -55,6 +59,7 @@ class UnivariateBSpline(object):
     def __call__(self, x):
         """
         Evaluates the univariate B-spline at the point x.
+
         :param x: point of evaluation
         :return: B(x)
         """
@@ -84,6 +89,7 @@ class UnivariateBSpline(object):
     def knot_index(self, x):
         """
         Finds the knot-index such that x is contained in the corresponding knot-interval.
+
         :param x: point of interest
         :return: index
         """
@@ -104,7 +110,18 @@ class UnivariateBSpline(object):
 
 
 def find_knot_index(x, knots, endpoint=False):
-    # if we have requested end point, and are at the end, return corresponding index.
+    """
+    Finds the index i such that t_i <= x < t_i+1.
+    If endpoint is True, then we check for t_n-1 <= x <= t_n
+    for the final index.
+    
+    :param x: point in question
+    :param knots: knot vector
+    :endpoint false: Boolean, whether to include the final knot
+    :return: index i
+    """
+    # if we have requested end point, and are at the end, return
+    # corresponding index.
     knots = knots
     if endpoint and (knots[-2] <= x <= knots[-1]):
         i = max(np.argmax(knots < x) - 1, 0)
@@ -118,7 +135,9 @@ def find_knot_index(x, knots, endpoint=False):
 
 def augment_knots(knots, degree):
     """
-    Adds degree + 1 values to either end of the knot vector, in order to facilitate matrix based evaluation.
+    Adds degree + 1 values to either end of the knot vector, in order to
+    facilitate matrix based evaluation.
+
     :param knots: knot vector
     :param degree: polynomial degree
     :return: padded knot vector
