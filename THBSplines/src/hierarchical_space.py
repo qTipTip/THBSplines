@@ -18,10 +18,12 @@ class HierarchicalSpace(Space):
 
     def __init__(self, knots, degrees, dim):
         """
-        Initialize a hierarchical space with a base mesh and space over the given knot vectors
-        :param knots:
-        :param degrees:
-        :param dim:
+        Initialize a hierarchical space with a base mesh and space over the
+        given knot vectors
+
+        :param knots: tensor product knot vectors
+        :param degrees: correpsonding tensor product degrees
+        :param dim: parametric dimension
         """
         self.nlevels = 1
         self.spaces = [TensorProductSpace(knots, degrees, dim)] if dim != 2 else [TensorProductSpace2D(knots, degrees, dim)]
@@ -37,12 +39,12 @@ class HierarchicalSpace(Space):
         self.degrees = degrees
         self.dim = dim
 
-    def refine(self, marked_functions: dict, new_cells: dict) -> np.ndarray:
+    def refine(self, marked_functions: dict, new_cells: dict):
         """
-        Refine the hierarchical space, and return the projection matrix to pass from coarse space to refined space.
+        Refine the hierarchical space.
+
         :param marked_functions: marked functions/cells to refine
         :param new_cells: global indices of new active cells for each level, as returned by ``HierarchicalMesh.refine``.
-        :return: np.ndarray
         """
 
         if len(self.spaces) < self.mesh.nlevels:
@@ -52,6 +54,9 @@ class HierarchicalSpace(Space):
         self.update_active_functions(marked_functions, new_cells)
 
     def add_level(self):
+        """
+        Adds a level of refinement to the hierarchical space.
+        """
         if len(self.spaces) == self.mesh.nlevels - 1:
             refined_space, projector_onedim = self.spaces[self.mesh.nlevels - 2].refine()
 
@@ -66,9 +71,12 @@ class HierarchicalSpace(Space):
 
     def get_basis_conversion_matrix(self, level, coarse_indices=None):
         """
-        :param level:
+        Returns the basis conversion matrix taking you from level to the
+        next.
+
+        :param level: refinement level of the underlying tensor product space
         :param coarse_indices: indices of the coarse active functions.
-        :return:
+        :return: a basis conversion matrix
         """
         print('Space dimensions', self.nfuncs_level[level], self.spaces[level].nfuncs,
               self.spaces[level].nfuncs_onedim)
@@ -111,6 +119,13 @@ class HierarchicalSpace(Space):
         return c
 
     def compute_full_projection_matrix(self, level):
+        """
+        Computes the kroneker product of the 1D basis-projections at a given
+        level and stores it as a sparse matrix.
+
+        :param level: refinement level in question
+        :return: sparse projection matrix
+        """
         c = 1
         for dim in range(self.dim):
             c = sp.kron(self.projections_onedim[level][dim], c)
@@ -120,6 +135,7 @@ class HierarchicalSpace(Space):
     def update_active_functions(self, marked_entities: dict, new_cells: dict):
         """
         Updates the set of active and deactivated functions.
+
         :param marked_entities: indices of active functions to deactivate
         :param new_cells: cells added to the new mesh, as returned by ``HierarchicalMesh.refine``.
         """
@@ -161,6 +177,15 @@ class HierarchicalSpace(Space):
         self.nfuncs = sum(self.nfuncs_level.values())
 
     def get_children(self, level, marked_functions_at_level):
+        """
+        Return the indices of the children function of the marked functions
+        at the given level.
+
+        :param level: refinement level
+        :param marked_functions_at_level: list of function indices marked at given refinement level.
+        :return: np.array of indices
+        """
+
         children = np.array([], dtype=np.int)
         projection = self.compute_full_projection_matrix(level)
         for func_idx in marked_functions_at_level:
@@ -170,7 +195,9 @@ class HierarchicalSpace(Space):
 
     def functions_to_deactivate_from_cells(self, marked_cells: dict):
         """
-        Returns the indices of functions that have no active cells within their support.
+        Returns the indices of functions that have no active cells within
+        their support.
+
         :param marked_cells: cell indices to check against
         :return: function indices
         """
@@ -199,8 +226,10 @@ class HierarchicalSpace(Space):
 
     def create_subdivision_matrix(self, mode='reduced') -> dict:
         """
-        Returns hspace.nlevels-1 matrices used for representing coarse B-splines in terms of the finer B-splines.
-        :param self: HierarchicalSpace containing the needed information
+        Returns hspace.nlevels-1 matrices used for representing coarse
+        B-splines in terms of the finer B-splines.
+        
+        :param mode: whether to create a full or a reduced subdivision matrix. Only reduced supported at the moment.
         :return: a dictionary mapping
         """
 
@@ -236,8 +265,10 @@ class HierarchicalSpace(Space):
 
     def _get_truncated_supports(self):
         """
-        Returns the indices at the fine level that constitutes the supports of each truncated basis function.
-        :return:
+        Returns the indices at the fine level that constitutes the supports of
+        each truncated basis function.
+
+        :return: indices of cells that support each truncated basis function.
         """
         C = self.create_subdivision_matrix(mode='full')[self.nlevels - 1].toarray()
         trunc_basis_to_fine_idx = {}
@@ -249,9 +280,11 @@ class HierarchicalSpace(Space):
 
     def _get_fine_basis_support_cells(self, fine_active_basis):
         """
-        Given a list of functions, returns the unique cells at the finest level in their common support.
-        :param fine_active_basis:
-        :return:
+        Given a list of functions, returns the unique cells at the finest level
+        in their common support.
+
+        :param fine_active_basis: list of function indices
+        :return: a set of cells at the finest refinement level in their common support
         """
 
         cells = np.array([], dtype=np.int)
@@ -264,10 +297,12 @@ class HierarchicalSpace(Space):
 
     def refine_in_rectangle(self, rectangle, level):
         """
-        Returns the set active of indices marked for refinement contained in the given rectangle
-        :param rectangle:
-        :param level:
-        :return:
+        Returns the set active of indices marked for refinement contained in
+        the given rectangle
+
+        :param rectangle: array containing endpoints of rectangle
+        :param level: refinement level
+        :return: indices of active cells markde for refinement.
         """
         eps = np.spacing(1)
         cells = self.mesh.meshes[level].cells
