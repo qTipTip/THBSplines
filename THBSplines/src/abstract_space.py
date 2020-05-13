@@ -11,8 +11,8 @@ class Space(ABC):
         """
         Given a list of N cell-indices, return a list of N lists, such that the i'th list gives the indices of the functions
         supported over cell i.
-        :param cell_indices:
-        :return:
+        :param cell_indices: indices of cells in question 
+        :return: nested list of function indices corresponding to each cell.
         """
         pass
 
@@ -21,7 +21,7 @@ class Space(ABC):
         """
         Given a list of N basis-indices, return a list of N lists, such that the i'th list gives the indices of the cells
         supporting over basis i.
-        :param basis_indices:
-        :return:
+        :param basis_indices: indices of basis functions in question
+        :return: nested list of cells corresponding to each function
         """
         pass

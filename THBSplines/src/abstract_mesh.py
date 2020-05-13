@@ -14,6 +14,6 @@ class Mesh(ABC):
     def get_gauss_points(self, cell_indices: np.ndarray) -> np.ndarray:
         """
         Computes gauss quadrature points and weights for the given list of cells.
-        :return:
+        :param cell_indices: indices of cells to compute quadrature points for.
         """
         pass

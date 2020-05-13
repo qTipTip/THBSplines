@@ -6,6 +6,16 @@ from tqdm import tqdm
 
 
 def hierarchical_mass_matrix(T, order=None, integration_region=None, mode='reduced'):
+    """
+    Computes the mass matrix for the hierarchical spline space T.
+
+    :param T: hierarchical space
+    :param order: Integration order
+    :param integration_region: If None, integrate over the whole domain, else restrict to relevant cells
+    :param mode: whether to use reduced or full projection matrices. Only reduced currently supported.
+    :return: sparse mass matrix
+    """
+
     mesh = T.mesh
 
     n = T.nfuncs
@@ -36,6 +46,15 @@ def hierarchical_mass_matrix(T, order=None, integration_region=None, mode='reduc
 
 
 def hierarchical_stiffness_matrix(T, order=None, integration_region = None, mode='reduced'):
+    """
+    Computes the stiffness matrix for the hierarchical spline space T.
+
+    :param T: hierarchical space
+    :param order: Integration order
+    :param integration_region: If None, integrate over the whole domain, else restrict to relevant cells
+    :param mode: whether to use reduced or full projection matrices. Only reduced currently supported.
+    :return: sparse stiffness matrix
+    """
     mesh = T.mesh
 
     n = T.nfuncs
@@ -66,10 +85,12 @@ def hierarchical_stiffness_matrix(T, order=None, integration_region = None, mode
 
 def translate_points(points, cell, weights):
     """
-    Translates the gauss-quadrature points to the cell
-    :param points:
-    :param cell:
-    :return:
+    Translates the gauss-quadrature points and weights to the cell
+
+    :param points: quadrature points
+    :param cell: cell to translate to 
+    :param weights: quadrature weights
+    :return: translated quadrature points
     """
     n = len(points)
     dim = cell.shape[0]
@@ -90,11 +111,12 @@ def translate_points(points, cell, weights):
 def local_mass_matrix(T, level, order=None, element_indices=None):
     """
     Computes the mass matrix on a given level
+
     :param T: HierarchicalSpace object
     :param level: hierarchical level
     :param order: integration order
     :param element_indices: elements to integrate over. If None, all elements on this level will be integrated over.
-    :return:
+    :return: local mass matrix
     """
     if element_indices is None:
         element_indices = range(T.mesh.meshes[level].nelems)
@@ -130,6 +152,15 @@ def local_mass_matrix(T, level, order=None, element_indices=None):
 
 
 def local_stiffness_matrix(T, level, order=None, element_indices=None):
+    """
+    Computes the stiffness matrix on a given level
+
+    :param T: HierarchicalSpace object
+    :param level: hierarchical level
+    :param order: integration order
+    :param element_indices: elements to integrate over. If None, all elements on this level will be integrated over.
+    :return: local stiffness matrix
+    """
     if element_indices is None:
         element_indices = range(T.mesh.meshes[level].nelems)
     active_cells_i = np.intersect1d(T.mesh.aelem_level[level], element_indices)
