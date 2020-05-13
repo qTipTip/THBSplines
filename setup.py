@@ -1,20 +1,17 @@
 import numpy
 from Cython.Build import cythonize
-from setuptools import setup, Extension
-
-ext_modules = [
-    Extension("BSpline", ["THBSplines/src_c/BSpline.pyx"], include_dirs=[numpy.get_include()])
-]
+from setuptools import setup
 
 setup(
     name='THBSplines',
     version='',
-    packages=['THBSplines'],
+    packages=['THBSplines', 'THBSplines.src', 'THBSplines.src_c'],
     url='',
     license='',
     author='Ivar Stangeby',
     author_email='',
     description='',
-    zip_safe=False,
-    ext_modules=cythonize(ext_modules, annotate=True)
+    ext_modules=cythonize('**/*.pyx', annotate=True, build_dir="THBSplines/src_c/build"),
+    include_dirs = [numpy.get_include()]
 )
+

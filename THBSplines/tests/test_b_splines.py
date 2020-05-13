@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from THBSplines.lib.BSpline import BSpline, TensorProductBSpline
+from THBSplines.src_c.BSpline import BSpline, TensorProductBSpline
 
 
 @pytest.fixture

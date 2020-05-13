@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.integrate
 import scipy.sparse as sp
-from THBSplines.lib.BSpline import integrate as cintegrate, integrate_grad as cintegrate_grad
+from THBSplines.src_c.BSpline import integrate as cintegrate, integrate_grad as cintegrate_grad
 from tqdm import tqdm
 
 

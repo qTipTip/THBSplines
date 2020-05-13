@@ -3,7 +3,7 @@ from typing import Union, List, Tuple
 
 import numpy as np
 import scipy.sparse as sp
-from THBSplines.lib.BSpline import TensorProductBSpline
+from THBSplines.src_c.BSpline import TensorProductBSpline
 from THBSplines.src.abstract_space import Space
 from THBSplines.src.b_spline import augment_knots, find_knot_index
 from THBSplines.src.cartesian_mesh import CartesianMesh
