@@ -11,8 +11,7 @@ class BSpline(object):
         corresponding knots.
         
         :param degrees: np.array of degrees
-        :param knots: list of knot-vectors where knot vector knots[i] has
-        length d_i + 2.
+        :param knots: list of knot-vectors where knot vector knots[i] has length d_i + 2.
         """
         self.degrees = degrees
         self.knots = knots
@@ -117,7 +116,8 @@ def find_knot_index(x, knots, endpoint=False):
     
     :param x: point in question
     :param knots: knot vector
-    :endpoint false: Boolean, whether to include the final knot
+    :param endpoint: Boolean, whether to include the final knot
+
     :return: index i
     """
     # if we have requested end point, and are at the end, return
