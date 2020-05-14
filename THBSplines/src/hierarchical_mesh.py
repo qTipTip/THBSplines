@@ -5,6 +5,13 @@ from THBSplines.src.cartesian_mesh import CartesianMesh
 
 class HierarchicalMesh(Mesh):
     def plot_cells(self, return_fig = False) -> None:
+        """
+        Plots the hierarchical mesh, and optionally returns the figure handle.
+        Otherwise, the figure is displayed.
+
+        :param return_fig: if true, return the figure handle
+        :return: plt.fig handle if return_fig is true, None otherwise.
+        """
         import matplotlib.pyplot as plt
 
         fig = plt.figure()
@@ -45,9 +52,11 @@ class HierarchicalMesh(Mesh):
 
     def refine(self, marked_cells: dict):
         """
-        Refines the hierarchical mesh, and returns the global
-        element indices of active elements for each level.
-        :return:
+        Refines the hierarchical mesh, and returns the global element indices
+        of active elements for each level.
+
+        :param marked_cells: indices of cells marked for refinement
+        :return: updated elements
         """
 
         while self.nlevels - 1 <= max(marked_cells.keys()):
@@ -61,8 +70,9 @@ class HierarchicalMesh(Mesh):
     def update_active_cells(self, marked_cells):
         """
         Updates the set of active cells and deactivated cells.
-        :param marked_cells:
-        :return:
+
+        :param marked_cells: indices of cells marked for refinement
+        :return: returns the newly added cells
         """
 
         number_of_levels = len(marked_cells)

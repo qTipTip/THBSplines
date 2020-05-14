@@ -14,8 +14,9 @@ class CartesianMesh(Mesh):
     def __init__(self, knots, parametric_dimension):
         """
         Represents a regular cartesian mesh in ``parametric_dimension`` dimensions.
-        :param knots:
-        :param parametric_dimension:
+
+        :param knots: knot vectors defining the mesh, a list of lists
+        :param parametric_dimension: number of parametric directions
         """
         self.knots = np.array([np.unique(knot_v) for knot_v in knots])
         self.dim = parametric_dimension
@@ -53,8 +54,9 @@ class CartesianMesh(Mesh):
     def get_sub_elements(self, box):
         """
         Returns the indices of the cells that are contained in the region delimited by `box`.
-        :param box:
-        :return:
+
+        :param box: numpy array containing endpoints of the box / rectangle
+        :return: indices of cells contained in box
         """
 
         indices = []
